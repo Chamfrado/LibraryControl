@@ -1,5 +1,6 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('node:path');
+const { listarAcervo } = require('./db/acervo.repo');
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -17,5 +18,9 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  ipcMain.handle('acervo:listar', () => {
+    return listarAcervo();
+  });
+
   createWindow();
 });
