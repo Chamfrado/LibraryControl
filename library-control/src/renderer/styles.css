@@ -354,3 +354,43 @@ td {
   color: #666;
   padding: 8px 0;
 }
+
+.selecionado-card {
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 6px 0 12px;
+  max-width: 520px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.selecionado-card.vazio {
+  color: #666;
+  background: #f9fafb;
+}
+
+.selecionado-card-livro {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.selecionado-capa {
+  width: 56px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  display: block;
+  background: white;
+}
+
+.selecionado-capa.sem-capa {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: #666;
+  background: #f3f4f6;
+}

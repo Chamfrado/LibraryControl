@@ -7,13 +7,17 @@ document.getElementById("app").innerHTML = getLayout(
       <label>Usuário</label>
       <div class="acoes-formulario">
         <button id="btnSelecionarUsuario" type="button">Pesquisar usuário</button>
-        <span id="usuarioSelecionadoTexto">Nenhum usuário selecionado</span>
+      </div>
+      <div id="usuarioSelecionadoCard" class="selecionado-card vazio">
+        Nenhum usuário selecionado
       </div>
 
       <label>Livro</label>
       <div class="acoes-formulario">
         <button id="btnSelecionarLivro" type="button">Pesquisar livro</button>
-        <span id="livroSelecionadoTexto">Nenhum livro selecionado</span>
+      </div>
+      <div id="livroSelecionadoCard" class="selecionado-card vazio">
+        Nenhum livro selecionado
       </div>
 
       <label for="inputDias">Quantidade de dias</label>
@@ -59,10 +63,10 @@ const btnBuscarEmprestimos = document.getElementById("btnBuscarEmprestimos");
 
 const btnSelecionarUsuario = document.getElementById("btnSelecionarUsuario");
 const btnSelecionarLivro = document.getElementById("btnSelecionarLivro");
-const usuarioSelecionadoTexto = document.getElementById(
-  "usuarioSelecionadoTexto",
+const usuarioSelecionadoCard = document.getElementById(
+  "usuarioSelecionadoCard",
 );
-const livroSelecionadoTexto = document.getElementById("livroSelecionadoTexto");
+const livroSelecionadoCard = document.getElementById("livroSelecionadoCard");
 
 let usuarioSelecionado = null;
 let livroSelecionado = null;
@@ -158,6 +162,48 @@ function getInfoEmprestimo(e) {
   };
 }
 
+function renderUsuarioSelecionado() {
+  if (!usuarioSelecionado) {
+    usuarioSelecionadoCard.className = "selecionado-card vazio";
+    usuarioSelecionadoCard.innerHTML = "Nenhum usuário selecionado";
+    return;
+  }
+
+  usuarioSelecionadoCard.className = "selecionado-card";
+  usuarioSelecionadoCard.innerHTML = `
+    <div><strong>${usuarioSelecionado.nome ?? ""}</strong></div>
+    <div>Login: ${usuarioSelecionado.login ?? "-"}</div>
+    <div>Nível: ${usuarioSelecionado.nivel ?? "-"}</div>
+    <div>Turma: ${usuarioSelecionado.turma ?? "-"}</div>
+  `;
+}
+
+function renderLivroSelecionado() {
+  if (!livroSelecionado) {
+    livroSelecionadoCard.className = "selecionado-card vazio";
+    livroSelecionadoCard.innerHTML = "Nenhum livro selecionado";
+    return;
+  }
+
+  livroSelecionadoCard.className = "selecionado-card";
+  livroSelecionadoCard.innerHTML = `
+    <div class="selecionado-card-livro">
+      <div>
+        ${
+          livroSelecionado.capa
+            ? `<img src="./assets/livros/${encodeURIComponent(livroSelecionado.capa)}" alt="Capa" class="selecionado-capa" />`
+            : `<div class="selecionado-capa sem-capa">Sem capa</div>`
+        }
+      </div>
+      <div>
+        <div><strong>${livroSelecionado.titulo ?? ""}</strong></div>
+        <div>Autor: ${livroSelecionado.autor ?? "-"}</div>
+        <div>Disponível: ${livroSelecionado.quantidade ?? 0}</div>
+      </div>
+    </div>
+  `;
+}
+
 function renderEmprestimos(lista) {
   resultadoEmprestimosEl.innerHTML = `
     <h2>Empréstimos - Total: ${lista.length}</h2>
@@ -246,7 +292,7 @@ async function selecionarUsuario() {
   if (!escolhido) return;
 
   usuarioSelecionado = escolhido;
-  usuarioSelecionadoTexto.textContent = `${escolhido.nome ?? ""} (${escolhido.login ?? ""})`;
+  renderUsuarioSelecionado();
 }
 
 async function selecionarLivro() {
@@ -267,7 +313,7 @@ async function selecionarLivro() {
   if (!escolhido) return;
 
   livroSelecionado = escolhido;
-  livroSelecionadoTexto.textContent = `${escolhido.titulo ?? ""} (${escolhido.quantidade ?? 0} disponível)`;
+  renderLivroSelecionado();
 }
 
 btnSelecionarUsuario.addEventListener("click", async () => {
@@ -330,8 +376,8 @@ btnCriarEmprestimo.addEventListener("click", async () => {
 
     usuarioSelecionado = null;
     livroSelecionado = null;
-    usuarioSelecionadoTexto.textContent = "Nenhum usuário selecionado";
-    livroSelecionadoTexto.textContent = "Nenhum livro selecionado";
+    renderUsuarioSelecionado();
+    renderLivroSelecionado();
     inputDias.value = 7;
 
     await carregarEmprestimos();
@@ -381,6 +427,8 @@ filtroStatusEmprestimo.addEventListener("change", async () => {
   try {
     setStatus("Carregando empréstimos...");
     await carregarEmprestimos();
+    renderUsuarioSelecionado();
+    renderLivroSelecionado();
     setStatus("");
   } catch (error) {
     setStatus(`Erro ao carregar empréstimos: ${error.message}`, "error");
