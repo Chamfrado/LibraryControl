@@ -10,6 +10,7 @@ document.getElementById("app").innerHTML = getLayout(
   <button id="btnExportarAcervoCsv">Exportar Acervo (CSV)</button>
   <button id="btnExportarUsuariosCsv">Exportar Usuários (CSV)</button>
   <button id="btnExportarEmprestimosCsv">Exportar Empréstimos (CSV)</button>
+  <button id="btnExportarEmprestimosPdf">Exportar Empréstimos (PDF)</button>
 </div>
   <hr />
     <h3>Backup do banco de dados</h3>
@@ -38,6 +39,9 @@ const btnExportarUsuariosCsv = document.getElementById(
 );
 const btnExportarEmprestimosCsv = document.getElementById(
   "btnExportarEmprestimosCsv",
+);
+const btnExportarEmprestimosPdf = document.getElementById(
+  "btnExportarEmprestimosPdf",
 );
 
 btnFazerBackup.addEventListener("click", async () => {
@@ -74,9 +78,7 @@ btnRestaurarBackup.addEventListener("click", async () => {
         "Isso vai substituir o banco atual pelos dados do backup selecionado. Deseja continuar?",
     });
 
-    if (!confirmado) {
-      return;
-    }
+    if (!confirmado) return;
 
     showLoadingModal("Restaurando backup...");
 
@@ -84,15 +86,15 @@ btnRestaurarBackup.addEventListener("click", async () => {
 
     hideLoadingModal();
 
-    if (resultado?.canceled) {
-      return;
-    }
+    if (resultado?.canceled) return;
 
     await alertModal({
       title: "Sucesso",
       message:
-        "Backup restaurado com sucesso.\n\nFeche e abra novamente a aplicação para recarregar os dados.",
+        "Backup restaurado com sucesso.\n\nA aplicação será reiniciada automaticamente.",
     });
+
+    await window.api.reiniciarAplicacao();
   } catch (error) {
     hideLoadingModal();
 
@@ -165,6 +167,30 @@ btnExportarEmprestimosCsv.addEventListener("click", async () => {
     });
   } catch (error) {
     hideLoadingModal();
+    await alertModal({
+      title: "Erro",
+      message: error.message,
+    });
+  }
+});
+
+btnExportarEmprestimosPdf.addEventListener("click", async () => {
+  try {
+    showLoadingModal("Exportando empréstimos em PDF...");
+
+    const resultado = await window.api.exportarEmprestimosPdf();
+
+    hideLoadingModal();
+
+    if (resultado?.canceled) return;
+
+    await alertModal({
+      title: "Sucesso",
+      message: `Relatório em PDF exportado com sucesso.\n\nArquivo salvo em:\n${resultado.path}`,
+    });
+  } catch (error) {
+    hideLoadingModal();
+
     await alertModal({
       title: "Erro",
       message: error.message,

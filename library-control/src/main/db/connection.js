@@ -25,4 +25,10 @@ function getDatabasePath() {
   return path.join(userDataPath, "bibliotecario.db");
 }
 
-module.exports = { getDatabase, getDatabasePath };
+function closeDatabase() {
+  if (db) {
+    db.close();
+    db = null;
+  }
+}
+module.exports = { getDatabase, getDatabasePath, closeDatabase };

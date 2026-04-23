@@ -1,5 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog } = require("electron");
 const path = require("node:path");
+const PDFDocument = require("pdfkit");
+
 const {
   listarAcervo,
   buscarAcervo,
@@ -30,7 +32,7 @@ const {
 } = require("./db/emprestimos.repo");
 
 const fs = require("fs");
-const { getDatabasePath } = require("./db/connection");
+const { getDatabasePath, closeDatabase } = require("./db/connection");
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -45,6 +47,81 @@ function createWindow() {
   });
 
   win.loadFile(path.join(__dirname, "../renderer/index.html"));
+}
+
+function gerarPdfEmprestimos(dados, destino) {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 40, size: "A4" });
+    const stream = fs.createWriteStream(destino);
+
+    doc.pipe(stream);
+
+    doc.fontSize(18).text("Relatório de Empréstimos", { align: "center" });
+    doc.moveDown();
+
+    const agora = new Date();
+    doc
+      .fontSize(10)
+      .text(`Gerado em: ${agora.toLocaleString("pt-BR")}`, { align: "right" });
+
+    doc.moveDown();
+
+    let y = doc.y;
+
+    function escreverLinha(col1, col2, col3, col4, col5, isHeader = false) {
+      const fontSize = isHeader ? 10 : 9;
+      if (y > 760) {
+        doc.addPage();
+        y = 50;
+      }
+
+      doc.fontSize(fontSize).font(isHeader ? "Helvetica-Bold" : "Helvetica");
+
+      doc.text(col1, 40, y, { width: 120 });
+      doc.text(col2, 165, y, { width: 140 });
+      doc.text(col3, 310, y, { width: 70 });
+      doc.text(col4, 385, y, { width: 70 });
+      doc.text(col5, 460, y, { width: 90 });
+
+      y += isHeader ? 22 : 20;
+    }
+
+    escreverLinha(
+      "Usuário",
+      "Livro",
+      "Empréstimo",
+      "Devolução",
+      "Status",
+      true,
+    );
+
+    dados.forEach((item) => {
+      const devolvido = String(item.devolvido ?? "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .includes("sim");
+
+      const hoje = new Date().toISOString().slice(0, 10);
+      const atrasado =
+        !devolvido && item.data_devolucao && item.data_devolucao < hoje;
+
+      const status = devolvido ? "Devolvido" : atrasado ? "Atrasado" : "Ativo";
+
+      escreverLinha(
+        item.usuario ?? "",
+        item.livro ?? "",
+        item.data_atual ?? "",
+        item.data_devolucao ?? "",
+        status,
+      );
+    });
+
+    doc.end();
+
+    stream.on("finish", resolve);
+    stream.on("error", reject);
+  });
 }
 
 app.whenReady().then(() => {
@@ -333,38 +410,16 @@ app.whenReady().then(() => {
       throw new Error("Arquivo de backup não encontrado.");
     }
 
-    // fecha conexão atual com o banco, se necessário
-    // como seu connection.js mantém singleton, vamos sobrescrever o arquivo diretamente
+    closeDatabase();
+
     fs.copyFileSync(origem, destino);
 
     return {
       canceled: false,
       path: origem,
+      restartRequired: true,
     };
   });
-
-  function escapeCsv(value) {
-    if (value === null || value === undefined) return "";
-    const str = String(value).replace(/"/g, '""');
-    return /[",\n;]/.test(str) ? `"${str}"` : str;
-  }
-
-  function toCsv(rows) {
-    if (!rows || !rows.length) {
-      return "";
-    }
-
-    const headers = Object.keys(rows[0]);
-    const lines = [
-      headers.join(";"),
-      ...rows.map((row) =>
-        headers.map((header) => escapeCsv(row[header])).join(";"),
-      ),
-    ];
-
-    return lines.join("\n");
-  }
-
   ipcMain.handle("relatorio:exportar-acervo", async () => {
     const dados = listarAcervo();
 
@@ -436,6 +491,36 @@ app.whenReady().then(() => {
 
     const csv = toCsv(dados);
     fs.writeFileSync(result.filePath, csv, "utf8");
+
+    return {
+      canceled: false,
+      path: result.filePath,
+    };
+  });
+
+  ipcMain.handle("sistema:reiniciar", () => {
+    app.relaunch();
+    app.exit(0);
+  });
+
+  ipcMain.handle("relatorio:exportar-emprestimos-pdf", async () => {
+    const dados = listarEmprestimos();
+
+    const agora = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    const nomeArquivo = `emprestimos-${agora.getFullYear()}-${pad(agora.getMonth() + 1)}-${pad(agora.getDate())}_${pad(agora.getHours())}-${pad(agora.getMinutes())}-${pad(agora.getSeconds())}.pdf`;
+
+    const result = await dialog.showSaveDialog({
+      title: "Salvar relatório de empréstimos em PDF",
+      defaultPath: nomeArquivo,
+      filters: [{ name: "PDF", extensions: ["pdf"] }],
+    });
+
+    if (result.canceled || !result.filePath) {
+      return { canceled: true };
+    }
+
+    await gerarPdfEmprestimos(dados, result.filePath);
 
     return {
       canceled: false,

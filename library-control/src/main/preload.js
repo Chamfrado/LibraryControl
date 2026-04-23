@@ -40,4 +40,7 @@ contextBridge.exposeInMainWorld("api", {
   exportarUsuariosCsv: () => ipcRenderer.invoke("relatorio:exportar-usuarios"),
   exportarEmprestimosCsv: () =>
     ipcRenderer.invoke("relatorio:exportar-emprestimos"),
+  reiniciarAplicacao: () => ipcRenderer.invoke("sistema:reiniciar"),
+  exportarEmprestimosPdf: () =>
+    ipcRenderer.invoke("relatorio:exportar-emprestimos-pdf"),
 });
