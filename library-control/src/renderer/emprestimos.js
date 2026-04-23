@@ -250,9 +250,35 @@ function renderEmprestimos(lista) {
   document.querySelectorAll(".btn-devolver").forEach((botao) => {
     botao.addEventListener("click", async () => {
       try {
-        await window.api.devolverEmprestimo(botao.dataset.id);
-        await carregarEmprestimos();
+        const emprestimoId = botao.dataset.id;
+        const emprestimo = lista.find(
+          (item) => String(item.id) === String(emprestimoId),
+        );
+
+        const confirmado = await confirmModal({
+          title: "Registrar devolução",
+          message: emprestimo
+            ? `Deseja registrar a devolução do livro "${emprestimo.livro ?? ""}" para o usuário "${emprestimo.usuario ?? ""}"?`
+            : "Deseja registrar esta devolução?",
+        });
+
+        if (!confirmado) return;
+
+        showLoadingModal("Registrando devolução...");
+
+        await window.api.devolverEmprestimo(emprestimoId);
+
+        hideLoadingModal();
+
+        await buscarEmprestimosTela();
+
+        await alertModal({
+          title: "Sucesso",
+          message: "Devolução registrada com sucesso.",
+        });
       } catch (error) {
+        hideLoadingModal();
+
         await alertModal({
           title: "Erro",
           message: error.message,
