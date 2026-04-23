@@ -4,6 +4,26 @@ document.getElementById("app").innerHTML = getLayout(
     <h2>Configurações</h2>
     <hr />
 
+
+
+<h3>Modelos e Importação</h3>
+
+<h4>Modelos para importação</h4>
+<div class="form-box">
+  <button id="btnBaixarModeloAcervo">Baixar modelo de Acervo (CSV)</button>
+  <button id="btnBaixarModeloUsuarios">Baixar modelo de Usuários (CSV)</button>
+</div>
+
+<h4>Importar usuários</h4>
+<div class="form-box">
+  <button id="btnImportarUsuariosCsv">Importar Usuários (CSV)</button>
+</div>
+
+
+
+
+<hr />
+
 <h3>Relatórios</h3>
 
 <div class="form-box">
@@ -43,6 +63,99 @@ const btnExportarEmprestimosCsv = document.getElementById(
 const btnExportarEmprestimosPdf = document.getElementById(
   "btnExportarEmprestimosPdf",
 );
+
+const btnBaixarModeloAcervo = document.getElementById("btnBaixarModeloAcervo");
+const btnBaixarModeloUsuarios = document.getElementById(
+  "btnBaixarModeloUsuarios",
+);
+
+const btnImportarUsuariosCsv = document.getElementById(
+  "btnImportarUsuariosCsv",
+);
+
+btnImportarUsuariosCsv.addEventListener("click", async () => {
+  try {
+    const confirmado = await confirmModal({
+      title: "Importar usuários",
+      message:
+        "Selecione um arquivo CSV no modelo correto. Usuários com o mesmo login serão atualizados. Deseja continuar?",
+    });
+
+    if (!confirmado) return;
+
+    showLoadingModal("Importando usuários...");
+
+    const resultado = await window.api.importarUsuariosCsv();
+
+    hideLoadingModal();
+
+    if (resultado?.canceled) return;
+
+    await alertModal({
+      title: "Importação concluída",
+      message:
+        `Registros identificados: ${resultado.total}\n\n` +
+        `Criados: ${resultado.criados}\n` +
+        `Atualizados: ${resultado.atualizados}\n` +
+        `Ignorados: ${resultado.ignorados}`,
+    });
+  } catch (error) {
+    hideLoadingModal();
+
+    await alertModal({
+      title: "Erro na importação",
+      message: error.message,
+    });
+  }
+});
+
+btnBaixarModeloAcervo.addEventListener("click", async () => {
+  try {
+    showLoadingModal("Gerando modelo de acervo...");
+
+    const resultado = await window.api.baixarModeloAcervo();
+
+    hideLoadingModal();
+
+    if (resultado?.canceled) return;
+
+    await alertModal({
+      title: "Sucesso",
+      message: `Modelo de acervo salvo com sucesso.\n\nArquivo salvo em:\n${resultado.path}`,
+    });
+  } catch (error) {
+    hideLoadingModal();
+
+    await alertModal({
+      title: "Erro",
+      message: error.message,
+    });
+  }
+});
+
+btnBaixarModeloUsuarios.addEventListener("click", async () => {
+  try {
+    showLoadingModal("Gerando modelo de usuários...");
+
+    const resultado = await window.api.baixarModeloUsuarios();
+
+    hideLoadingModal();
+
+    if (resultado?.canceled) return;
+
+    await alertModal({
+      title: "Sucesso",
+      message: `Modelo de usuários salvo com sucesso.\n\nArquivo salvo em:\n${resultado.path}`,
+    });
+  } catch (error) {
+    hideLoadingModal();
+
+    await alertModal({
+      title: "Erro",
+      message: error.message,
+    });
+  }
+});
 
 btnFazerBackup.addEventListener("click", async () => {
   try {

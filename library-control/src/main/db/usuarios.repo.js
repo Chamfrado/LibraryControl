@@ -165,6 +165,31 @@ function listarUsuariosComResumo() {
   return stmt.all();
 }
 
+function buscarUsuarioPorLogin(login) {
+  const db = getDatabase();
+
+  return db
+    .prepare(
+      `
+    SELECT id
+    FROM cad_usuario
+    WHERE lower(login) = lower(?)
+    LIMIT 1
+  `,
+    )
+    .get(login);
+}
+
+function upsertUsuarioPorLogin(dados) {
+  const existente = buscarUsuarioPorLogin(dados.login);
+
+  if (existente) {
+    return atualizarUsuario(existente.id, dados);
+  }
+
+  return criarUsuario(dados);
+}
+
 module.exports = {
   listarUsuarios,
   buscarUsuarios,
@@ -173,4 +198,5 @@ module.exports = {
   atualizarUsuario,
   excluirUsuario,
   listarUsuariosComResumo,
+  upsertUsuarioPorLogin,
 };

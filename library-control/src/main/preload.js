@@ -51,4 +51,9 @@ contextBridge.exposeInMainWorld("api", {
 
   listarHistoricoLivro: (acervoId) =>
     ipcRenderer.invoke("historico:livro", acervoId),
+
+  baixarModeloAcervo: () => ipcRenderer.invoke("modelo:baixar-acervo"),
+  baixarModeloUsuarios: () => ipcRenderer.invoke("modelo:baixar-usuarios"),
+
+  importarUsuariosCsv: () => ipcRenderer.invoke("importar:usuarios"),
 });

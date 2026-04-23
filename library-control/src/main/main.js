@@ -22,6 +22,7 @@ const {
   atualizarUsuario,
   excluirUsuario,
   listarUsuariosComResumo,
+  upsertUsuarioPorLogin,
 } = require("./db/usuarios.repo");
 const {
   listarEmprestimos,
@@ -126,6 +127,40 @@ function gerarPdfEmprestimos(dados, destino) {
     stream.on("finish", resolve);
     stream.on("error", reject);
   });
+}
+
+function parseCsvConteudo(conteudo) {
+  const linhas = conteudo
+    .split(/\r?\n/)
+    .map((linha) => linha.trim())
+    .filter((linha) => linha && !linha.startsWith("#"));
+
+  if (linhas.length < 2) {
+    throw new Error("O arquivo não possui registros para importação.");
+  }
+
+  const cabecalho = linhas[0].split(";").map((c) => c.trim());
+  const registros = linhas.slice(1).map((linha) => {
+    const valores = linha.split(";").map((v) => v.trim());
+
+    return cabecalho.reduce((obj, campo, index) => {
+      obj[campo] = valores[index] ?? "";
+      return obj;
+    }, {});
+  });
+
+  return { cabecalho, registros };
+}
+
+function validarCabecalho(cabecalho, esperado) {
+  const atual = cabecalho.join(";");
+  const ideal = esperado.join(";");
+
+  if (atual !== ideal) {
+    throw new Error(
+      `Cabeçalho inválido.\n\nEsperado:\n${ideal}\n\nEncontrado:\n${atual}`,
+    );
+  }
 }
 
 app.whenReady().then(() => {
@@ -546,6 +581,147 @@ app.whenReady().then(() => {
 
   ipcMain.handle("historico:livro", (_, acervoId) => {
     return listarHistoricoPorLivro(Number(acervoId));
+  });
+
+  ipcMain.handle("modelo:baixar-acervo", async () => {
+    const conteudo = [
+      "# MODELO DE IMPORTACAO - ACERVO",
+      "# Preencha os dados abaixo mantendo o cabecalho exatamente igual.",
+      "#",
+      "# Campos obrigatorios: titulo, quantidade, categoria, tipo",
+      "#",
+      "# TIPO DO ACERVO:",
+      "# 1 = LIVRO",
+      "# 3 = APOSTILA",
+      "# 4 = COLECAO",
+      "# 5 = ENCICLOPEDIA E DICIONARIOS",
+      "# 6 = REVISTA",
+      "# 7 = JORNAL",
+      "# 8 = GIBI",
+      "#",
+      "# CATEGORIA:",
+      "# Use o número correspondente à categoria cadastrada no sistema.",
+      "# Exemplo: 1 = LINGUA PORTUGUESA, 2 = GEOGRAFIA, etc. (Consulte as opções no sistema Acervo -> cadastrar livro)",
+      ,
+      "#",
+      "titulo;autor;editora;isbn;quantidade;categoria;tipo",
+      "Exemplo de Livro;Autor Exemplo;Editora Exemplo;9780000000000;3;1;1",
+    ].join("\n");
+
+    const result = await dialog.showSaveDialog({
+      title: "Salvar modelo de importação do acervo",
+      defaultPath: "modelo-importacao-acervo.csv",
+      filters: [{ name: "CSV", extensions: ["csv"] }],
+    });
+
+    if (result.canceled || !result.filePath) {
+      return { canceled: true };
+    }
+
+    fs.writeFileSync(result.filePath, conteudo, "utf8");
+
+    return {
+      canceled: false,
+      path: result.filePath,
+    };
+  });
+
+  ipcMain.handle("modelo:baixar-usuarios", async () => {
+    const conteudo = [
+      "# MODELO DE IMPORTACAO - USUARIOS",
+      "# Preencha os dados abaixo mantendo o cabecalho exatamente igual.",
+      "#",
+      "# Campos obrigatórios: nome, login, nivel",
+      "#",
+      "# NIVEL DO USUARIO:",
+      "# 1 = Administrador",
+      "# 2 = Aluno",
+      "# 3 = Operador",
+      "#",
+      "nome;login;nivel;turma;fone;email",
+      "Maria Silva;maria.silva;2;1A;(35) 99999-9999;maria@email.com",
+    ].join("\n");
+
+    const result = await dialog.showSaveDialog({
+      title: "Salvar modelo de importação de usuários",
+      defaultPath: "modelo-importacao-usuarios.csv",
+      filters: [{ name: "CSV", extensions: ["csv"] }],
+    });
+
+    if (result.canceled || !result.filePath) {
+      return { canceled: true };
+    }
+
+    fs.writeFileSync(result.filePath, conteudo, "utf8");
+
+    return {
+      canceled: false,
+      path: result.filePath,
+    };
+  });
+
+  ipcMain.handle("importar:usuarios", async () => {
+    const result = await dialog.showOpenDialog({
+      title: "Selecionar CSV de usuários",
+      properties: ["openFile"],
+      filters: [{ name: "CSV", extensions: ["csv"] }],
+    });
+
+    if (result.canceled || !result.filePaths.length) {
+      return { canceled: true };
+    }
+
+    const arquivo = result.filePaths[0];
+    const conteudo = fs.readFileSync(arquivo, "utf8");
+
+    const { cabecalho, registros } = parseCsvConteudo(conteudo);
+
+    validarCabecalho(cabecalho, [
+      "nome",
+      "login",
+      "nivel",
+      "turma",
+      "fone",
+      "email",
+    ]);
+
+    let criados = 0;
+    let atualizados = 0;
+    let ignorados = 0;
+
+    registros.forEach((r) => {
+      if (!r.nome || !r.login || !r.nivel) {
+        ignorados++;
+        return;
+      }
+
+      const existente = buscarUsuarios(r.login).find(
+        (u) => String(u.login).toLowerCase() === String(r.login).toLowerCase(),
+      );
+
+      upsertUsuarioPorLogin({
+        nome: r.nome,
+        login: r.login,
+        nivel: Number(r.nivel),
+        turma: r.turma || null,
+        fone: r.fone || null,
+        email: r.email || null,
+      });
+
+      if (existente) {
+        atualizados++;
+      } else {
+        criados++;
+      }
+    });
+
+    return {
+      canceled: false,
+      total: registros.length,
+      criados,
+      atualizados,
+      ignorados,
+    };
   });
 
   createWindow();
