@@ -19,9 +19,27 @@ function getLayout(activePage, contentHtml) {
   `;
 }
 
-function setStatus(message) {
+function setStatus(message, type = "") {
   const el = document.getElementById("status");
-  if (el) el.textContent = message;
+  if (!el) return;
+
+  el.className = "status-box";
+  if (type) {
+    el.classList.add(`status-${type}`);
+  }
+
+  el.textContent = message;
+}
+
+function setBoxStatus(element, message, type = "") {
+  if (!element) return;
+
+  element.className = "status-box";
+  if (type) {
+    element.classList.add(`status-${type}`);
+  }
+
+  element.textContent = message;
 }
 
 function normalizarTexto(valor) {

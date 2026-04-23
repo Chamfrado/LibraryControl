@@ -29,10 +29,15 @@ document.getElementById("app").innerHTML = getLayout(
   </select>
   <small class="hint">Ex.: Livro, Apostila, Revista, Jornal, Gibi.</small>
 
-  <button id="btnSelecionarImagem" type="button">Selecionar imagem</button>
+   <button id="btnSelecionarImagem" type="button">Selecionar imagem</button>
   <span id="nomeImagemSelecionada">Nenhuma imagem</span>
-
+  <div class="acoes-formulario">
+ 
   <button id="btnCriarLivro">Salvar livro</button>
+  <button id="btnCancelarEdicaoLivro" type="button">Cancelar edição</button>
+  <button id="btnLimparLivro" type="button">Limpar formulário</button>
+</div>
+
 </div>
 
 <div id="statusLivro" class="status-box"></div>
@@ -64,6 +69,13 @@ const statusLivro = document.getElementById("statusLivro");
 
 const livroTipo = document.getElementById("livroTipo");
 
+const btnCancelarEdicaoLivro = document.getElementById(
+  "btnCancelarEdicaoLivro",
+);
+const btnLimparLivro = document.getElementById("btnLimparLivro");
+
+let listaAcervoAtual = [];
+
 let caminhoImagemSelecionada = null;
 let livroEmEdicaoId = null;
 
@@ -74,11 +86,11 @@ function limparFormulario() {
   livroIsbn.value = "";
   livroQuantidade.value = "";
   livroCategoria.value = "";
+  livroTipo.value = "";
   caminhoImagemSelecionada = null;
   nomeImagemSelecionada.textContent = "Nenhuma imagem";
   livroEmEdicaoId = null;
   btnCriarLivro.textContent = "Salvar livro";
-  livroTipo.value = "";
 }
 
 function renderAcervo(lista) {
@@ -139,7 +151,9 @@ function renderAcervo(lista) {
       livroTipo.value = livro.tipo ?? "";
       nomeImagemSelecionada.textContent = livro.capa || "Nenhuma imagem";
       btnCriarLivro.textContent = "Atualizar livro";
-      statusLivro.textContent = "Modo edição ativado.";
+      setBoxStatus(statusLivro, "Modo edição ativado.", "info");
+
+      renderAcervo([livro]);
     });
   });
 
@@ -156,8 +170,15 @@ function renderAcervo(lista) {
   });
 }
 
+async function cancelarEdicaoLivro() {
+  limparFormulario();
+  await carregarAcervo();
+  setBoxStatus(statusLivro, "Edição cancelada.", "info");
+}
+
 async function carregarAcervo() {
   const livros = await window.api.listarAcervo();
+  listaAcervoAtual = livros;
   renderAcervo(livros);
 }
 
@@ -204,7 +225,7 @@ btnCriarLivro.addEventListener("click", async () => {
       return;
     }
 
-    statusLivro.textContent = "Processando...";
+    setBoxStatus(statusLivro, "Processando...", "info");
 
     let nomeImagem = null;
     if (caminhoImagemSelecionada) {
@@ -223,7 +244,7 @@ btnCriarLivro.addEventListener("click", async () => {
         tipo,
         capa: nomeImagem,
       });
-      statusLivro.textContent = "Livro atualizado com sucesso.";
+      setBoxStatus(statusLivro, "Livro atualizado com sucesso.", "success");
     } else {
       await window.api.criarLivro({
         titulo,
@@ -235,13 +256,13 @@ btnCriarLivro.addEventListener("click", async () => {
         tipo,
         capa: nomeImagem,
       });
-      statusLivro.textContent = "Livro cadastrado com sucesso.";
+      setBoxStatus(statusLivro, "Livro cadastrado com sucesso.", "success");
     }
 
     limparFormulario();
     await carregarAcervo();
   } catch (error) {
-    statusLivro.textContent = `Erro: ${error.message}`;
+    setBoxStatus(statusLivro, `Erro: ${error.message}`, "error");
   }
 });
 
@@ -252,9 +273,10 @@ btnBuscar.addEventListener("click", async () => {
       ? await window.api.buscarAcervo(termo)
       : await window.api.listarAcervo();
 
+    listaAcervoAtual = livros;
     renderAcervo(livros);
   } catch (error) {
-    setStatus(`Erro ao buscar acervo: ${error.message}`);
+    setStatus(`Erro ao buscar acervo: ${error.message}`, "error");
   }
 });
 
@@ -292,6 +314,15 @@ async function carregarCategoriasETipos() {
       .join("")}
   `;
 }
+
+btnCancelarEdicaoLivro.addEventListener("click", async () => {
+  await cancelarEdicaoLivro();
+});
+
+btnLimparLivro.addEventListener("click", () => {
+  limparFormulario();
+  setBoxStatus(statusLivro, "Formulário limpo.", "info");
+});
 
 (async function init() {
   try {

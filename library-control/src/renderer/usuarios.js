@@ -26,7 +26,11 @@ document.getElementById("app").innerHTML = getLayout(
       <input id="usuarioFone" placeholder="Telefone" />
       <label for="usuarioEmail">E-mail</label>
       <input id="usuarioEmail" placeholder="E-mail" />
-      <button id="btnSalvarUsuario">Salvar usuário</button>
+      <div class="acoes-formulario">
+  <button id="btnSalvarUsuario">Salvar usuário</button>
+  <button id="btnCancelarEdicaoUsuario" type="button">Cancelar edição</button>
+  <button id="btnLimparUsuario" type="button">Limpar formulário</button>
+</div>
     </div>
 
     <div id="statusUsuario" class="status-box"></div>
@@ -53,6 +57,13 @@ const statusUsuario = document.getElementById("statusUsuario");
 const inputBuscaUsuario = document.getElementById("buscaUsuario");
 const btnBuscarUsuario = document.getElementById("btnBuscarUsuario");
 const resultadoUsuariosEl = document.getElementById("resultadoUsuarios");
+
+const btnCancelarEdicaoUsuario = document.getElementById(
+  "btnCancelarEdicaoUsuario",
+);
+const btnLimparUsuario = document.getElementById("btnLimparUsuario");
+
+let listaUsuariosAtual = [];
 
 let usuarioEmEdicaoId = null;
 
@@ -116,7 +127,9 @@ function renderUsuarios(lista) {
       usuarioFone.value = usuario.fone ?? "";
       usuarioEmail.value = usuario.email ?? "";
       btnSalvarUsuario.textContent = "Atualizar usuário";
-      statusUsuario.textContent = "Modo edição ativado.";
+      setBoxStatus(statusUsuario, "Modo edição ativado.", "info");
+
+      renderUsuarios([usuario]);
     });
   });
 
@@ -133,8 +146,15 @@ function renderUsuarios(lista) {
   });
 }
 
+async function cancelarEdicaoUsuario() {
+  limparFormulario();
+  await carregarUsuarios();
+  setBoxStatus(statusUsuario, "Edição cancelada.", "info");
+}
+
 async function carregarUsuarios() {
   const usuarios = await window.api.listarUsuarios();
+  listaUsuariosAtual = usuarios;
   renderUsuarios(usuarios);
 }
 
@@ -172,7 +192,7 @@ btnSalvarUsuario.addEventListener("click", async () => {
         fone,
         email,
       });
-      statusUsuario.textContent = "Usuário atualizado com sucesso.";
+      setBoxStatus(statusUsuario, "Usuário atualizado com sucesso.", "success");
     } else {
       await window.api.criarUsuario({
         nome,
@@ -182,13 +202,17 @@ btnSalvarUsuario.addEventListener("click", async () => {
         fone,
         email,
       });
-      statusUsuario.textContent = "Usuário cadastrado com sucesso.";
+      setBoxStatus(statusUsuario, "Usuário cadastrado com sucesso.", "success");
     }
 
     limparFormulario();
     await carregarUsuarios();
   } catch (error) {
-    statusUsuario.textContent = `Erro ao salvar usuário: ${error.message}`;
+    setBoxStatus(
+      statusUsuario,
+      `Erro ao salvar usuário: ${error.message}`,
+      "error",
+    );
   }
 });
 
@@ -199,14 +223,24 @@ btnBuscarUsuario.addEventListener("click", async () => {
       ? await window.api.buscarUsuarios(termo)
       : await window.api.listarUsuarios();
 
+    listaUsuariosAtual = usuarios;
     renderUsuarios(usuarios);
   } catch (error) {
-    setStatus(`Erro ao buscar usuários: ${error.message}`);
+    setStatus(`Erro ao buscar usuários: ${error.message}`, "error");
   }
 });
 
 inputBuscaUsuario.addEventListener("keydown", (event) => {
   if (event.key === "Enter") btnBuscarUsuario.click();
+});
+
+btnCancelarEdicaoUsuario.addEventListener("click", async () => {
+  await cancelarEdicaoUsuario();
+});
+
+btnLimparUsuario.addEventListener("click", () => {
+  limparFormulario();
+  setBoxStatus(statusUsuario, "Formulário limpo.", "info");
 });
 
 (async function init() {
