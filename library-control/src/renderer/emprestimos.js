@@ -4,15 +4,17 @@ document.getElementById("app").innerHTML = getLayout(
     <h2>Criar empréstimo</h2>
 
     <div class="form-box">
-      <label for="selectUsuario">Usuário</label>
-      <select id="selectUsuario">
-        <option value="">Selecione um usuário</option>
-      </select>
+      <label>Usuário</label>
+      <div class="acoes-formulario">
+        <button id="btnSelecionarUsuario" type="button">Pesquisar usuário</button>
+        <span id="usuarioSelecionadoTexto">Nenhum usuário selecionado</span>
+      </div>
 
-      <label for="selectLivro">Livro</label>
-      <select id="selectLivro">
-        <option value="">Selecione um livro</option>
-      </select>
+      <label>Livro</label>
+      <div class="acoes-formulario">
+        <button id="btnSelecionarLivro" type="button">Pesquisar livro</button>
+        <span id="livroSelecionadoTexto">Nenhum livro selecionado</span>
+      </div>
 
       <label for="inputDias">Quantidade de dias</label>
       <input type="number" id="inputDias" min="1" value="7" />
@@ -21,8 +23,6 @@ document.getElementById("app").innerHTML = getLayout(
     </div>
 
     <div id="statusEmprestimo" class="status-box"></div>
-
-    
 
     <hr />
 
@@ -42,18 +42,14 @@ document.getElementById("app").innerHTML = getLayout(
 
       <button id="btnBuscarEmprestimos">Buscar</button>
     </div>
+
     <div id="resultadoEmprestimos"></div>
   `,
 );
 
-const selectUsuario = document.getElementById("selectUsuario");
-const selectLivro = document.getElementById("selectLivro");
 const inputDias = document.getElementById("inputDias");
 const btnCriarEmprestimo = document.getElementById("btnCriarEmprestimo");
 const statusEmprestimo = document.getElementById("statusEmprestimo");
-const btnCarregarAtrasados = document.getElementById("btnCarregarAtrasados");
-const resultadoAtrasadosEl = document.getElementById("resultadoAtrasados");
-const btnEmprestimos = document.getElementById("btnCarregarEmprestimos");
 const resultadoEmprestimosEl = document.getElementById("resultadoEmprestimos");
 const inputBuscaEmprestimo = document.getElementById("buscaEmprestimo");
 const filtroStatusEmprestimo = document.getElementById(
@@ -61,36 +57,105 @@ const filtroStatusEmprestimo = document.getElementById(
 );
 const btnBuscarEmprestimos = document.getElementById("btnBuscarEmprestimos");
 
-function preencherSelectUsuarios(lista) {
-  selectUsuario.innerHTML = `
-    <option value="">Selecione um usuário</option>
-    ${lista
-      .map(
-        (usuario) => `
-      <option value="${usuario.id}">
-        ${usuario.nome ?? `Usuário ${usuario.id}`}
-      </option>
-    `,
-      )
-      .join("")}
-  `;
+const btnSelecionarUsuario = document.getElementById("btnSelecionarUsuario");
+const btnSelecionarLivro = document.getElementById("btnSelecionarLivro");
+const usuarioSelecionadoTexto = document.getElementById(
+  "usuarioSelecionadoTexto",
+);
+const livroSelecionadoTexto = document.getElementById("livroSelecionadoTexto");
+
+let usuarioSelecionado = null;
+let livroSelecionado = null;
+
+function formatarDataPtBr(data) {
+  if (!data) return "";
+
+  const [ano, mes, dia] = String(data).split("-");
+  if (!ano || !mes || !dia) return data;
+
+  return `${dia}/${mes}/${ano}`;
 }
 
-function preencherSelectLivros(lista) {
-  selectLivro.innerHTML = `
-    <option value="">Selecione um livro</option>
-    ${lista
-      .map((livro) => {
-        const qtd = Number(livro.quantidade ?? 0);
-        const indisponivel = qtd <= 0 ? "disabled" : "";
-        return `
-        <option value="${livro.id}" ${indisponivel}>
-          ${livro.titulo ?? `Livro ${livro.id}`} (${qtd} disponível)
-        </option>
-      `;
-      })
-      .join("")}
-  `;
+function diferencaDias(dataAlvo) {
+  if (!dataAlvo) return null;
+
+  const hoje = new Date();
+  const hojeLocal = new Date(
+    hoje.getFullYear(),
+    hoje.getMonth(),
+    hoje.getDate(),
+  );
+
+  const [ano, mes, dia] = String(dataAlvo).split("-").map(Number);
+  const alvoLocal = new Date(ano, mes - 1, dia);
+
+  const diffMs = alvoLocal - hojeLocal;
+  return Math.round(diffMs / (1000 * 60 * 60 * 24));
+}
+
+function getInfoEmprestimo(e) {
+  const jaDevolvido = normalizarTexto(e.devolvido).includes("sim");
+
+  if (jaDevolvido) {
+    return {
+      status: "Devolvido",
+      prazoTexto: "devolvido",
+      classeLinha: "status-devolvido",
+      classeBadge: "badge-devolvido",
+      jaDevolvido: true,
+    };
+  }
+
+  const dias = diferencaDias(e.data_devolucao);
+
+  if (dias === null) {
+    return {
+      status: "Ativo",
+      prazoTexto: "-",
+      classeLinha: "status-ativo",
+      classeBadge: "badge-ativo",
+      jaDevolvido: false,
+    };
+  }
+
+  if (dias < 0) {
+    const atraso = Math.abs(dias);
+    return {
+      status: "Atrasado",
+      prazoTexto: `${atraso} dia${atraso === 1 ? "" : "s"} de atraso`,
+      classeLinha: "status-atrasado",
+      classeBadge: "badge-atrasado",
+      jaDevolvido: false,
+    };
+  }
+
+  if (dias === 0) {
+    return {
+      status: "Vence hoje",
+      prazoTexto: "vence hoje",
+      classeLinha: "status-vencendo",
+      classeBadge: "badge-vencendo",
+      jaDevolvido: false,
+    };
+  }
+
+  if (dias === 1) {
+    return {
+      status: "Vence amanhã",
+      prazoTexto: "vence amanhã",
+      classeLinha: "status-vencendo",
+      classeBadge: "badge-vencendo",
+      jaDevolvido: false,
+    };
+  }
+
+  return {
+    status: "Ativo",
+    prazoTexto: `${dias} dia${dias === 1 ? "" : "s"} restante${dias === 1 ? "" : "s"}`,
+    classeLinha: "status-ativo",
+    classeBadge: "badge-ativo",
+    jaDevolvido: false,
+  };
 }
 
 function renderEmprestimos(lista) {
@@ -103,30 +168,31 @@ function renderEmprestimos(lista) {
         <th>Data</th>
         <th>Devolução</th>
         <th>Status</th>
+        <th>Prazo</th>
         <th>Ação</th>
       </tr>
       ${lista
         .map((e) => {
-          const status = getStatusEmprestimo(e);
-
-          const classeLinha =
-            status === "Atrasado"
-              ? "status-atrasado"
-              : status === "Devolvido"
-                ? "status-devolvido"
-                : "status-ativo";
-
-          const jaDevolvido = status === "Devolvido";
+          const info = getInfoEmprestimo(e);
 
           return `
-          <tr class="${classeLinha}">
+          <tr class="${info.classeLinha}">
             <td>${e.usuario ?? ""}</td>
             <td>${e.livro ?? ""}</td>
-            <td>${e.data_atual ?? ""}</td>
-            <td>${e.data_devolucao ?? ""}</td>
-            <td>${status}</td>
+            <td>${formatarDataPtBr(e.data_atual)}</td>
+            <td>${formatarDataPtBr(e.data_devolucao)}</td>
             <td>
-              ${jaDevolvido ? "-" : `<button class="btn-devolver" data-id="${e.id}">Devolver</button>`}
+              <span class="badge-status ${info.classeBadge}">
+                ${info.status}
+              </span>
+            </td>
+            <td>${info.prazoTexto}</td>
+            <td>
+              ${
+                info.jaDevolvido
+                  ? "-"
+                  : `<button class="btn-devolver" data-id="${e.id}">Devolver</button>`
+              }
             </td>
           </tr>
         `;
@@ -139,38 +205,15 @@ function renderEmprestimos(lista) {
     botao.addEventListener("click", async () => {
       try {
         await window.api.devolverEmprestimo(botao.dataset.id);
-        await carregarTudo();
+        await carregarEmprestimos();
       } catch (error) {
-        setStatus(`Erro ao devolver empréstimo: ${error.message}`);
+        await alertModal({
+          title: "Erro",
+          message: error.message,
+        });
       }
     });
   });
-}
-
-function renderAtrasados(lista) {
-  resultadoAtrasadosEl.innerHTML = `
-    <h2>Atrasados - Total: ${lista.length}</h2>
-    <table>
-      <tr>
-        <th>Usuário</th>
-        <th>Livro</th>
-        <th>Data do empréstimo</th>
-        <th>Data limite</th>
-      </tr>
-      ${lista
-        .map(
-          (item) => `
-        <tr class="atrasado">
-          <td>${item.usuario ?? ""}</td>
-          <td>${item.livro ?? ""}</td>
-          <td>${item.data_atual ?? ""}</td>
-          <td>${item.data_devolucao ?? ""}</td>
-        </tr>
-      `,
-        )
-        .join("")}
-    </table>
-  `;
 }
 
 async function carregarEmprestimos() {
@@ -190,25 +233,130 @@ async function buscarEmprestimosTela() {
   renderEmprestimos(lista);
 }
 
-async function carregarAtrasados() {
-  const lista = await window.api.listarEmprestimosAtrasados();
-  renderAtrasados(lista);
+async function selecionarUsuario() {
+  const usuarios = await window.api.listarUsuarios();
+
+  const escolhido = await escolherItemModal({
+    title: "Selecionar usuário",
+    placeholder: "Buscar por nome ou login...",
+    items: usuarios,
+    getLabel: (u) => `${u.nome ?? ""} (${u.login ?? "sem login"})`,
+  });
+
+  if (!escolhido) return;
+
+  usuarioSelecionado = escolhido;
+  usuarioSelecionadoTexto.textContent = `${escolhido.nome ?? ""} (${escolhido.login ?? ""})`;
 }
 
-async function carregarTudo() {
-  const usuarios = await window.api.listarUsuarios();
+async function selecionarLivro() {
   const livros = await window.api.listarAcervo();
-  preencherSelectUsuarios(usuarios);
-  preencherSelectLivros(livros);
-  await carregarEmprestimos();
-  await carregarAtrasados();
+
+  const disponiveis = livros.filter(
+    (livro) => Number(livro.quantidade ?? 0) > 0,
+  );
+
+  const escolhido = await escolherItemModal({
+    title: "Selecionar livro",
+    placeholder: "Buscar por título ou autor...",
+    items: disponiveis,
+    getLabel: (l) =>
+      `${l.titulo ?? ""} — ${l.autor ?? "Autor não informado"} (${l.quantidade ?? 0} disponível)`,
+  });
+
+  if (!escolhido) return;
+
+  livroSelecionado = escolhido;
+  livroSelecionadoTexto.textContent = `${escolhido.titulo ?? ""} (${escolhido.quantidade ?? 0} disponível)`;
 }
+
+btnSelecionarUsuario.addEventListener("click", async () => {
+  try {
+    await selecionarUsuario();
+  } catch (error) {
+    await alertModal({
+      title: "Erro",
+      message: error.message,
+    });
+  }
+});
+
+btnSelecionarLivro.addEventListener("click", async () => {
+  try {
+    await selecionarLivro();
+  } catch (error) {
+    await alertModal({
+      title: "Erro",
+      message: error.message,
+    });
+  }
+});
+
+btnCriarEmprestimo.addEventListener("click", async () => {
+  try {
+    const userId = usuarioSelecionado?.id;
+    const acervoId = livroSelecionado?.id;
+    const totalDias = inputDias.value;
+
+    if (!userId) {
+      await alertModal({
+        title: "Validação",
+        message: "Selecione um usuário.",
+      });
+      return;
+    }
+
+    if (!acervoId) {
+      await alertModal({
+        title: "Validação",
+        message: "Selecione um livro.",
+      });
+      return;
+    }
+
+    if (!totalDias || Number(totalDias) < 1) {
+      await alertModal({
+        title: "Validação",
+        message: "Informe uma quantidade de dias válida.",
+      });
+      return;
+    }
+
+    showLoadingModal("Criando empréstimo...");
+
+    await window.api.criarEmprestimo({ userId, acervoId, totalDias });
+
+    hideLoadingModal();
+
+    usuarioSelecionado = null;
+    livroSelecionado = null;
+    usuarioSelecionadoTexto.textContent = "Nenhum usuário selecionado";
+    livroSelecionadoTexto.textContent = "Nenhum livro selecionado";
+    inputDias.value = 7;
+
+    await carregarEmprestimos();
+
+    await alertModal({
+      title: "Sucesso",
+      message: "Empréstimo criado com sucesso.",
+    });
+  } catch (error) {
+    hideLoadingModal();
+    await alertModal({
+      title: "Erro",
+      message: error.message,
+    });
+  }
+});
 
 btnBuscarEmprestimos.addEventListener("click", async () => {
   try {
     await buscarEmprestimosTela();
   } catch (error) {
-    setStatus(`Erro ao buscar empréstimos: ${error.message}`);
+    await alertModal({
+      title: "Erro",
+      message: error.message,
+    });
   }
 });
 
@@ -222,79 +370,19 @@ filtroStatusEmprestimo.addEventListener("change", async () => {
   try {
     await buscarEmprestimosTela();
   } catch (error) {
-    setStatus(`Erro ao filtrar empréstimos: ${error.message}`);
+    await alertModal({
+      title: "Erro",
+      message: error.message,
+    });
   }
 });
-
-btnCriarEmprestimo.addEventListener("click", async () => {
-  try {
-    const userId = selectUsuario.value;
-    const acervoId = selectLivro.value;
-    const totalDias = inputDias.value;
-
-    if (!userId) {
-      statusEmprestimo.textContent = "Selecione um usuário.";
-      return;
-    }
-
-    if (!acervoId) {
-      statusEmprestimo.textContent = "Selecione um livro.";
-      return;
-    }
-
-    if (!totalDias || Number(totalDias) < 1) {
-      statusEmprestimo.textContent = "Informe uma quantidade de dias válida.";
-      return;
-    }
-
-    statusEmprestimo.textContent = "Criando empréstimo...";
-
-    await window.api.criarEmprestimo({ userId, acervoId, totalDias });
-
-    statusEmprestimo.textContent = "Empréstimo criado com sucesso.";
-    inputDias.value = 7;
-
-    await carregarTudo();
-  } catch (error) {
-    statusEmprestimo.textContent = `Erro ao criar empréstimo: ${error.message}`;
-  }
-});
-
-btnCarregarAtrasados.addEventListener("click", async () => {
-  try {
-    await carregarAtrasados();
-  } catch (error) {
-    setStatus(`Erro ao carregar atrasados: ${error.message}`);
-  }
-});
-
-btnEmprestimos.addEventListener("click", async () => {
-  try {
-    await carregarEmprestimos();
-  } catch (error) {
-    setStatus(`Erro ao carregar empréstimos: ${error.message}`);
-  }
-});
-
-function getStatusEmprestimo(e) {
-  const jaDevolvido = normalizarTexto(e.devolvido).includes("sim");
-  const atrasado =
-    !jaDevolvido &&
-    e.data_devolucao &&
-    new Date(e.data_devolucao) <
-      new Date(new Date().toISOString().slice(0, 10));
-
-  if (jaDevolvido) return "Devolvido";
-  if (atrasado) return "Atrasado";
-  return "Ativo";
-}
 
 (async function init() {
   try {
     setStatus("Carregando empréstimos...");
-    await carregarTudo();
+    await carregarEmprestimos();
     setStatus("");
   } catch (error) {
-    setStatus(`Erro ao carregar empréstimos: ${error.message}`);
+    setStatus(`Erro ao carregar empréstimos: ${error.message}`, "error");
   }
 })();

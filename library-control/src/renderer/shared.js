@@ -136,6 +136,87 @@ function showLoadingModal(message = "Processando...") {
   `;
 }
 
+function escolherItemModal({
+  title = "Selecionar item",
+  placeholder = "Buscar...",
+  items = [],
+  getLabel = (item) => String(item),
+}) {
+  return new Promise((resolve) => {
+    const root = ensureModalRoot();
+
+    const renderItems = (lista) => `
+      <div class="modal-lista">
+        ${
+          lista.length
+            ? lista
+                .map(
+                  (item, index) => `
+              <button class="modal-lista-item" data-index="${index}">
+                ${getLabel(item)}
+              </button>
+            `,
+                )
+                .join("")
+            : `<div class="modal-lista-vazia">Nenhum resultado encontrado.</div>`
+        }
+      </div>
+    `;
+
+    root.innerHTML = `
+      <div class="modal-overlay">
+        <div class="modal modal-selecao">
+          <div class="modal-header">${title}</div>
+          <div class="modal-body">
+            <input id="modalBuscaItem" placeholder="${placeholder}" />
+            <div id="modalListaContainer">
+              ${renderItems(items)}
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button id="modal-cancelar-selecao" class="btn-secondary">Cancelar</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const input = document.getElementById("modalBuscaItem");
+    const listaContainer = document.getElementById("modalListaContainer");
+    let listaAtual = [...items];
+
+    function bindLista() {
+      listaContainer.querySelectorAll(".modal-lista-item").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const item = listaAtual[Number(btn.dataset.index)];
+          closeModal();
+          resolve(item);
+        });
+      });
+    }
+
+    input.addEventListener("input", () => {
+      const termo = input.value.trim().toLowerCase();
+
+      listaAtual = items.filter((item) =>
+        getLabel(item).toLowerCase().includes(termo),
+      );
+
+      listaContainer.innerHTML = renderItems(listaAtual);
+      bindLista();
+    });
+
+    document
+      .getElementById("modal-cancelar-selecao")
+      .addEventListener("click", () => {
+        closeModal();
+        resolve(null);
+      });
+
+    bindLista();
+    input.focus();
+  });
+}
+
 function hideLoadingModal() {
   closeModal();
 }

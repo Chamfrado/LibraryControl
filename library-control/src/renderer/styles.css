@@ -293,3 +293,64 @@ td {
 #previewImagemWrapper {
   margin-top: 8px;
 }
+
+.status-vencendo {
+  background: #fff7d6;
+}
+
+.badge-status {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.badge-ativo {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-vencendo {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge-atrasado {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge-devolvido {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.modal-selecao {
+  width: min(560px, 92vw);
+}
+
+.modal-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.modal-lista-item {
+  text-align: left;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+}
+
+.modal-lista-item:hover {
+  background: #f3f4f6;
+}
+
+.modal-lista-vazia {
+  color: #666;
+  padding: 8px 0;
+}
