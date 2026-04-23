@@ -108,10 +108,40 @@ function atualizarLivro(id, dados) {
     id,
   );
 }
+function excluirLivro(id) {
+  const db = getDatabase();
+
+  const temEmprestimo = db
+    .prepare(
+      `
+    SELECT 1
+    FROM emprestimos
+    WHERE acervo_id = ?
+    LIMIT 1
+  `,
+    )
+    .get(id);
+
+  if (temEmprestimo) {
+    throw new Error(
+      "Não é possível excluir livro com empréstimos registrados.",
+    );
+  }
+
+  return db
+    .prepare(
+      `
+    DELETE FROM cad_acervo
+    WHERE id = ?
+  `,
+    )
+    .run(id);
+}
 module.exports = {
   listarAcervo,
   buscarAcervo,
   contarAcervo,
   criarLivro,
   atualizarLivro,
+  excluirLivro,
 };

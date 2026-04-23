@@ -6,6 +6,7 @@ const {
   contarAcervo,
   criarLivro,
   atualizarLivro,
+  excluirLivro,
 } = require("./db/acervo.repo");
 const {
   listarUsuarios,
@@ -13,6 +14,7 @@ const {
   contarUsuarios,
   criarUsuario,
   atualizarUsuario,
+  excluirUsuario,
 } = require("./db/usuarios.repo");
 const {
   listarEmprestimos,
@@ -232,6 +234,14 @@ app.whenReady().then(() => {
       fone: payload.fone?.trim() || null,
       email: payload.email?.trim() || null,
     });
+  });
+
+  ipcMain.handle("acervo:excluir", (_, id) => {
+    return excluirLivro(Number(id));
+  });
+
+  ipcMain.handle("usuario:excluir", (_, id) => {
+    return excluirUsuario(Number(id));
   });
 
   createWindow();

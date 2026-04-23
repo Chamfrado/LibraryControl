@@ -28,4 +28,6 @@ contextBridge.exposeInMainWorld("api", {
   criarUsuario: (payload) => ipcRenderer.invoke("usuario:criar", payload),
   atualizarUsuario: (payload) =>
     ipcRenderer.invoke("usuario:atualizar", payload),
+  excluirLivro: (id) => ipcRenderer.invoke("acervo:excluir", id),
+  excluirUsuario: (id) => ipcRenderer.invoke("usuario:excluir", id),
 });

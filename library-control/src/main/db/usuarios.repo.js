@@ -101,10 +101,39 @@ function atualizarUsuario(id, dados) {
   );
 }
 
+function excluirUsuario(id) {
+  const db = getDatabase();
+
+  const temEmprestimo = db
+    .prepare(
+      `
+    SELECT 1
+    FROM emprestimos
+    WHERE user_id = ?
+    LIMIT 1
+  `,
+    )
+    .get(id);
+
+  if (temEmprestimo) {
+    throw new Error("Não é possível excluir usuário com empréstimos.");
+  }
+
+  return db
+    .prepare(
+      `
+    DELETE FROM cad_usuario
+    WHERE id = ?
+  `,
+    )
+    .run(id);
+}
+
 module.exports = {
   listarUsuarios,
   buscarUsuarios,
   contarUsuarios,
   criarUsuario,
   atualizarUsuario,
+  excluirUsuario,
 };

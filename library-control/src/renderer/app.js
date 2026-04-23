@@ -97,7 +97,8 @@ function renderAcervo(lista) {
             <td>${qtd}</td>
             <td>${status}</td>
             <td>
-                <button class="btn-editar" data-id="${l.id}">Editar</button>
+              <button class="btn-editar" data-id="${l.id}">Editar</button>
+              <button class="btn-excluir" data-id="${l.id}">Excluir</button>
             </td>
           </tr>
         `;
@@ -127,6 +128,23 @@ function renderAcervo(lista) {
       statusLivro.textContent = "Modo edição ativado";
     });
   });
+
+  document.querySelectorAll(".btn-excluir").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      try {
+        const id = btn.dataset.id;
+
+        if (!confirm("Deseja realmente excluir este livro?")) return;
+
+        await window.api.excluirLivro(id);
+
+        await carregarAcervo();
+        await carregarDashboard();
+      } catch (error) {
+        alert(error.message);
+      }
+    });
+  });
 }
 
 function renderUsuarios(lista) {
@@ -154,6 +172,7 @@ function renderUsuarios(lista) {
           <td>${usuario.email ?? ""}</td>
           <td>
             <button class="btn-editar-usuario" data-id="${usuario.id}">Editar</button>
+            <button class="btn-excluir-usuario" data-id="${usuario.id}">Excluir</button>
           </td>
         </tr>
       `,
@@ -180,6 +199,23 @@ function renderUsuarios(lista) {
 
       btnSalvarUsuario.textContent = "Atualizar usuário";
       statusUsuario.textContent = "Modo edição ativado.";
+    });
+  });
+
+  document.querySelectorAll(".btn-excluir-usuario").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      try {
+        const id = btn.dataset.id;
+
+        if (!confirm("Deseja excluir este usuário?")) return;
+
+        await window.api.excluirUsuario(id);
+
+        await carregarUsuarios();
+        await carregarDashboard();
+      } catch (error) {
+        alert(error.message);
+      }
     });
   });
 }
