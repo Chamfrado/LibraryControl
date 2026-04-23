@@ -139,6 +139,7 @@ function renderAcervo(lista) {
             <td>${qtd}</td>
             <td>${status}</td>
             <td>
+              <button class="btn-historico-livro" data-id="${l.id}">Histórico</button>
               <button class="btn-editar" data-id="${l.id}">Editar</button>
               <button class="btn-excluir" data-id="${l.id}">Excluir</button>
             </td>
@@ -174,6 +175,57 @@ function renderAcervo(lista) {
       setBoxStatus(statusLivro, "Modo edição ativado.", "info");
 
       renderAcervo([livro]);
+    });
+  });
+
+  document.querySelectorAll(".btn-historico-livro").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      try {
+        const livros = await window.api.listarAcervoComResumo();
+        const livro = livros.find(
+          (l) => String(l.id) === String(btn.dataset.id),
+        );
+
+        if (!livro) {
+          await alertModal({
+            title: "Erro",
+            message: "Livro não encontrado.",
+          });
+          return;
+        }
+
+        await detalhesModal({
+          title: "Histórico do item do acervo",
+          content: `
+          <div class="detalhes-grid">
+            <div>
+              ${
+                livro.capa
+                  ? `<img src="./assets/livros/${encodeURIComponent(livro.capa)}" alt="Capa" class="detalhes-capa" />`
+                  : `<div class="detalhes-capa sem-capa">Sem capa</div>`
+              }
+            </div>
+            <div class="detalhes-bloco">
+              <div class="detalhes-titulo">${livro.titulo ?? ""}</div>
+              <div class="detalhes-sub">Autor: ${livro.autor ?? "-"}</div>
+              <div class="detalhes-sub">Editora: ${livro.editora ?? "-"}</div>
+              <div class="detalhes-sub">ISBN: ${livro.isbn ?? "-"}</div>
+              <div class="detalhes-sub">Quantidade disponível: ${livro.quantidade ?? 0}</div>
+              <div class="detalhes-sub">Categoria: ${livro.categoria ?? "-"}</div>
+              <div class="detalhes-sub">Tipo: ${livro.tipo ?? "-"}</div>
+              <hr />
+              <div class="detalhes-sub">Total de empréstimos: ${livro.total_emprestimos ?? 0}</div>
+              <div class="detalhes-sub">Empréstimos ativos: ${livro.emprestimos_ativos ?? 0}</div>
+            </div>
+          </div>
+        `,
+        });
+      } catch (error) {
+        await alertModal({
+          title: "Erro",
+          message: error.message,
+        });
+      }
     });
   });
 

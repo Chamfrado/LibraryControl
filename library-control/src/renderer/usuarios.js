@@ -104,6 +104,7 @@ function renderUsuarios(lista) {
           <td>${usuario.fone ?? ""}</td>
           <td>${usuario.email ?? ""}</td>
           <td>
+            <button class="btn-historico-usuario" data-id="${usuario.id}">Histórico</button>
             <button class="btn-editar-usuario" data-id="${usuario.id}">Editar</button>
             <button class="btn-excluir-usuario" data-id="${usuario.id}">Excluir</button>
           </td>
@@ -135,6 +136,48 @@ function renderUsuarios(lista) {
     });
   });
 
+  document.querySelectorAll(".btn-historico-usuario").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      try {
+        const usuarios = await window.api.listarUsuariosComResumo();
+        const usuario = usuarios.find(
+          (u) => String(u.id) === String(btn.dataset.id),
+        );
+
+        if (!usuario) {
+          await alertModal({
+            title: "Erro",
+            message: "Usuário não encontrado.",
+          });
+          return;
+        }
+
+        await detalhesModal({
+          title: "Histórico do usuário",
+          content: `
+          <div class="detalhes-bloco">
+            <div class="detalhes-titulo">${usuario.nome ?? ""}</div>
+            <div class="detalhes-sub">Login: ${usuario.login ?? "-"}</div>
+            <div class="detalhes-sub">Nível: ${usuario.nivel ?? "-"}</div>
+            <div class="detalhes-sub">Turma: ${usuario.turma ?? "-"}</div>
+            <div class="detalhes-sub">Telefone: ${usuario.fone ?? "-"}</div>
+            <div class="detalhes-sub">E-mail: ${usuario.email ?? "-"}</div>
+            <hr />
+            <div class="detalhes-sub">Total de empréstimos: ${usuario.total_emprestimos ?? 0}</div>
+            <div class="detalhes-sub">Empréstimos ativos: ${usuario.emprestimos_ativos ?? 0}</div>
+            <div class="detalhes-sub">Empréstimos atrasados: ${usuario.emprestimos_atrasados ?? 0}</div>
+          </div>
+        `,
+        });
+      } catch (error) {
+        await alertModal({
+          title: "Erro",
+          message: error.message,
+        });
+      }
+    });
+  });
+
   document.querySelectorAll(".btn-excluir-usuario").forEach((btn) => {
     btn.addEventListener("click", async () => {
       try {
@@ -161,6 +204,48 @@ function renderUsuarios(lista) {
     });
   });
 }
+
+document.querySelectorAll(".btn-historico-usuario").forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    try {
+      const usuarios = await window.api.listarUsuariosComResumo();
+      const usuario = usuarios.find(
+        (u) => String(u.id) === String(btn.dataset.id),
+      );
+
+      if (!usuario) {
+        await alertModal({
+          title: "Erro",
+          message: "Usuário não encontrado.",
+        });
+        return;
+      }
+
+      await detalhesModal({
+        title: "Histórico do usuário",
+        content: `
+          <div class="detalhes-bloco">
+            <div class="detalhes-titulo">${usuario.nome ?? ""}</div>
+            <div class="detalhes-sub">Login: ${usuario.login ?? "-"}</div>
+            <div class="detalhes-sub">Nível: ${usuario.nivel ?? "-"}</div>
+            <div class="detalhes-sub">Turma: ${usuario.turma ?? "-"}</div>
+            <div class="detalhes-sub">Telefone: ${usuario.fone ?? "-"}</div>
+            <div class="detalhes-sub">E-mail: ${usuario.email ?? "-"}</div>
+            <hr />
+            <div class="detalhes-sub">Total de empréstimos: ${usuario.total_emprestimos ?? 0}</div>
+            <div class="detalhes-sub">Empréstimos ativos: ${usuario.emprestimos_ativos ?? 0}</div>
+            <div class="detalhes-sub">Empréstimos atrasados: ${usuario.emprestimos_atrasados ?? 0}</div>
+          </div>
+        `,
+      });
+    } catch (error) {
+      await alertModal({
+        title: "Erro",
+        message: error.message,
+      });
+    }
+  });
+});
 
 function atualizarEstadoEdicaoUsuario() {
   if (usuarioEmEdicaoId) {

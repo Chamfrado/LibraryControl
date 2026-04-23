@@ -220,6 +220,33 @@ function escolherItemModal({
   });
 }
 
+function detalhesModal({ title = "Detalhes", content = "" }) {
+  return new Promise((resolve) => {
+    const root = ensureModalRoot();
+
+    root.innerHTML = `
+      <div class="modal-overlay">
+        <div class="modal modal-detalhes">
+          <div class="modal-header">${title}</div>
+          <div class="modal-body">
+            ${content}
+          </div>
+          <div class="modal-actions">
+            <button id="modal-fechar-detalhes" class="btn-secondary">Fechar</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document
+      .getElementById("modal-fechar-detalhes")
+      .addEventListener("click", () => {
+        closeModal();
+        resolve();
+      });
+  });
+}
+
 function hideLoadingModal() {
   closeModal();
 }
