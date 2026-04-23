@@ -286,7 +286,15 @@ async function selecionarUsuario() {
     title: "Selecionar usuário",
     placeholder: "Buscar por nome ou login...",
     items: usuarios,
-    getLabel: (u) => `${u.nome ?? ""} (${u.login ?? "sem login"})`,
+    getLabel: (u) => `${u.nome ?? ""} ${u.login ?? ""}`,
+    renderItem: (u) => `
+      <div class="modal-item-card">
+        <div class="modal-item-title">${u.nome ?? ""}</div>
+        <div class="modal-item-sub">Login: ${u.login ?? "-"}</div>
+        <div class="modal-item-sub">Nível: ${u.nivel ?? "-"}</div>
+        <div class="modal-item-sub">Turma: ${u.turma ?? "-"}</div>
+      </div>
+    `,
   });
 
   if (!escolhido) return;
@@ -306,8 +314,23 @@ async function selecionarLivro() {
     title: "Selecionar livro",
     placeholder: "Buscar por título ou autor...",
     items: disponiveis,
-    getLabel: (l) =>
-      `${l.titulo ?? ""} — ${l.autor ?? "Autor não informado"} (${l.quantidade ?? 0} disponível)`,
+    getLabel: (l) => `${l.titulo ?? ""} ${l.autor ?? ""}`,
+    renderItem: (l) => `
+      <div class="modal-item-livro">
+        <div>
+          ${
+            l.capa
+              ? `<img src="./assets/livros/${encodeURIComponent(l.capa)}" alt="Capa" class="modal-item-capa" />`
+              : `<div class="modal-item-capa sem-capa">Sem capa</div>`
+          }
+        </div>
+        <div class="modal-item-card">
+          <div class="modal-item-title">${l.titulo ?? ""}</div>
+          <div class="modal-item-sub">Autor: ${l.autor ?? "-"}</div>
+          <div class="modal-item-sub">Disponível: ${l.quantidade ?? 0}</div>
+        </div>
+      </div>
+    `,
   });
 
   if (!escolhido) return;

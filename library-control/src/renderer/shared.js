@@ -141,6 +141,7 @@ function escolherItemModal({
   placeholder = "Buscar...",
   items = [],
   getLabel = (item) => String(item),
+  renderItem = null,
 }) {
   return new Promise((resolve) => {
     const root = ensureModalRoot();
@@ -153,7 +154,9 @@ function escolherItemModal({
                 .map(
                   (item, index) => `
               <button class="modal-lista-item" data-index="${index}">
-                ${getLabel(item)}
+                ${
+                  renderItem ? renderItem(item) : `<div>${getLabel(item)}</div>`
+                }
               </button>
             `,
                 )
