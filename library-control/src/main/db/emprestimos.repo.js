@@ -175,9 +175,36 @@ function registrarDevolucao(id) {
   return registrarDevolucaoTx();
 }
 
+function contarEmprestimosAtivos() {
+  const db = getDatabase();
+
+  const stmt = db.prepare(`
+    SELECT COUNT(*) AS total
+    FROM emprestimos
+    WHERE lower(devolvido) NOT LIKE '%sim%'
+  `);
+
+  return stmt.get();
+}
+
+function contarEmprestimosAtrasados() {
+  const db = getDatabase();
+
+  const stmt = db.prepare(`
+    SELECT COUNT(*) AS total
+    FROM emprestimos
+    WHERE lower(devolvido) NOT LIKE '%sim%'
+      AND date(data_devolucao) < date('now', 'localtime')
+  `);
+
+  return stmt.get();
+}
+
 module.exports = {
   listarEmprestimos,
   criarEmprestimo,
   registrarDevolucao,
   listarEmprestimosAtrasados,
+  contarEmprestimosAtivos,
+  contarEmprestimosAtrasados,
 };

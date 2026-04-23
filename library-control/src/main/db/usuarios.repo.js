@@ -1,4 +1,4 @@
-const { getDatabase } = require('./connection');
+const { getDatabase } = require("./connection");
 
 function listarUsuarios() {
   const db = getDatabase();
@@ -25,4 +25,15 @@ function buscarUsuarios(termo) {
   return stmt.all(`%${termo}%`);
 }
 
-module.exports = { listarUsuarios, buscarUsuarios };
+function contarUsuarios() {
+  const db = getDatabase();
+
+  const stmt = db.prepare(`
+    SELECT COUNT(*) AS total
+    FROM cad_usuario
+  `);
+
+  return stmt.get();
+}
+
+module.exports = { listarUsuarios, buscarUsuarios, contarUsuarios };

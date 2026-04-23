@@ -1,4 +1,4 @@
-const { getDatabase } = require('./connection');
+const { getDatabase } = require("./connection");
 
 function listarAcervo() {
   const db = getDatabase();
@@ -30,4 +30,15 @@ function buscarAcervo(termo) {
   return stmt.all(`%${termo}%`, `%${termo}%`);
 }
 
-module.exports = { listarAcervo, buscarAcervo };
+function contarAcervo() {
+  const db = getDatabase();
+
+  const stmt = db.prepare(`
+    SELECT COUNT(*) AS total
+    FROM cad_acervo
+  `);
+
+  return stmt.get();
+}
+
+module.exports = { listarAcervo, buscarAcervo, contarAcervo };

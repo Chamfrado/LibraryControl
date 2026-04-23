@@ -19,6 +19,19 @@ const statusEmprestimo = document.getElementById("statusEmprestimo");
 const btnCarregarAtrasados = document.getElementById("btnCarregarAtrasados");
 const resultadoAtrasadosEl = document.getElementById("resultadoAtrasados");
 
+const cardTotalLivros = document.getElementById("cardTotalLivros");
+const cardTotalUsuarios = document.getElementById("cardTotalUsuarios");
+const cardEmprestimosAtivos = document.getElementById("cardEmprestimosAtivos");
+const cardEmprestimosAtrasados = document.getElementById(
+  "cardEmprestimosAtrasados",
+);
+
+function setStatus(message) {
+  if (statusEl) {
+    statusEl.textContent = message;
+  }
+}
+
 function renderAcervo(lista) {
   resultadoEl.innerHTML = `
     <h2>Acervo - Total: ${lista.length}</h2>
@@ -78,13 +91,6 @@ function renderUsuarios(lista) {
   `;
 }
 
-function normalizarTexto(valor) {
-  return String(valor ?? "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
-
 function renderEmprestimos(lista) {
   resultadoEmprestimosEl.innerHTML = `
     <h2>Empréstimos - Total: ${lista.length}</h2>
@@ -131,9 +137,10 @@ function renderEmprestimos(lista) {
         await carregarAcervo();
         await carregarEmprestimos();
         await carregarAtrasados();
+        await carregarDashboard();
       } catch (error) {
         console.error(error);
-        statusEl.textContent = `Erro ao devolver empréstimo: ${error.message}`;
+        setStatus(`Erro ao devolver empréstimo: ${error.message}`);
       }
     });
   });
@@ -177,17 +184,18 @@ async function carregarEmprestimos() {
 
 async function carregarInicial() {
   try {
-    statusEl.textContent = "Carregando dados...";
+    setStatus("Carregando dados...");
 
+    await carregarDashboard();
     await carregarAcervo();
     await carregarUsuarios();
     await carregarEmprestimos();
     await carregarAtrasados();
 
-    statusEl.textContent = "";
+    setStatus("");
   } catch (error) {
     console.error(error);
-    statusEl.textContent = `Erro ao carregar dados: ${error.message}`;
+    setStatus(`Erro ao carregar dados: ${error.message}`);
   }
 }
 
@@ -208,7 +216,7 @@ btnBuscar.addEventListener("click", async () => {
     preencherSelectLivros(livros);
   } catch (error) {
     console.error(error);
-    statusEl.textContent = `Erro ao buscar acervo: ${error.message}`;
+    setStatus(`Erro ao buscar acervo: ${error.message}`);
   }
 });
 
@@ -217,7 +225,7 @@ btnCarregarAtrasados.addEventListener("click", async () => {
     await carregarAtrasados();
   } catch (error) {
     console.error(error);
-    statusEl.textContent = `Erro ao carregar atrasados: ${error.message}`;
+    setStatus(`Erro ao carregar atrasados: ${error.message}`);
   }
 });
 
@@ -232,7 +240,7 @@ btnBuscarUsuario.addEventListener("click", async () => {
     preencherSelectUsuarios(usuarios);
   } catch (error) {
     console.error(error);
-    statusEl.textContent = `Erro ao buscar usuários: ${error.message}`;
+    setStatus(`Erro ao buscar usuários: ${error.message}`);
   }
 });
 
@@ -241,7 +249,7 @@ btnEmprestimos.addEventListener("click", async () => {
     await carregarEmprestimos();
   } catch (error) {
     console.error(error);
-    statusEl.textContent = `Erro ao carregar empréstimos: ${error.message}`;
+    setStatus(`Erro ao carregar empréstimos: ${error.message}`);
   }
 });
 
@@ -280,11 +288,10 @@ btnCriarEmprestimo.addEventListener("click", async () => {
     await carregarAcervo();
     await carregarEmprestimos();
     await carregarAtrasados();
+    await carregarDashboard();
 
     statusEmprestimo.textContent = "Empréstimo criado com sucesso.";
     inputDias.value = 7;
-
-    await carregarEmprestimos();
   } catch (error) {
     console.error(error);
     statusEmprestimo.textContent = `Erro ao criar empréstimo: ${error.message}`;
@@ -341,6 +348,29 @@ async function carregarAcervo() {
   const livros = await window.api.listarAcervo();
   renderAcervo(livros);
   preencherSelectLivros(livros);
+}
+
+async function carregarDashboard() {
+  const totalLivros = await window.api.contarAcervo();
+  const totalUsuarios = await window.api.contarUsuarios();
+  const totalAtivos = await window.api.contarEmprestimosAtivos();
+  const totalAtrasados = await window.api.contarEmprestimosAtrasados();
+
+  if (cardTotalLivros) {
+    cardTotalLivros.textContent = totalLivros?.total ?? 0;
+  }
+
+  if (cardTotalUsuarios) {
+    cardTotalUsuarios.textContent = totalUsuarios?.total ?? 0;
+  }
+
+  if (cardEmprestimosAtivos) {
+    cardEmprestimosAtivos.textContent = totalAtivos?.total ?? 0;
+  }
+
+  if (cardEmprestimosAtrasados) {
+    cardEmprestimosAtrasados.textContent = totalAtrasados?.total ?? 0;
+  }
 }
 
 carregarInicial();

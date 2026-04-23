@@ -1,10 +1,20 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("node:path");
-const { listarAcervo, buscarAcervo } = require("./db/acervo.repo");
-const { buscarUsuarios, listarUsuarios } = require("./db/usuarios.repo");
+const {
+  listarAcervo,
+  buscarAcervo,
+  contarAcervo,
+} = require("./db/acervo.repo");
+const {
+  listarUsuarios,
+  buscarUsuarios,
+  contarUsuarios,
+} = require("./db/usuarios.repo");
 const {
   listarEmprestimos,
   listarEmprestimosAtrasados,
+  contarEmprestimosAtivos,
+  contarEmprestimosAtrasados,
   criarEmprestimo,
   registrarDevolucao,
 } = require("./db/emprestimos.repo");
@@ -69,6 +79,22 @@ app.whenReady().then(() => {
 
   ipcMain.handle("emprestimo:listar-atrasados", () => {
     return listarEmprestimosAtrasados();
+  });
+
+  ipcMain.handle("dashboard:contar-acervo", () => {
+    return contarAcervo();
+  });
+
+  ipcMain.handle("dashboard:contar-usuarios", () => {
+    return contarUsuarios();
+  });
+
+  ipcMain.handle("dashboard:contar-emprestimos-ativos", () => {
+    return contarEmprestimosAtivos();
+  });
+
+  ipcMain.handle("dashboard:contar-emprestimos-atrasados", () => {
+    return contarEmprestimosAtrasados();
   });
 
   createWindow();

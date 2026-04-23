@@ -14,4 +14,11 @@ contextBridge.exposeInMainWorld("api", {
   devolverEmprestimo: (id) => ipcRenderer.invoke("emprestimo:devolver", id),
   listarEmprestimosAtrasados: () =>
     ipcRenderer.invoke("emprestimo:listar-atrasados"),
+
+  contarAcervo: () => ipcRenderer.invoke("dashboard:contar-acervo"),
+  contarUsuarios: () => ipcRenderer.invoke("dashboard:contar-usuarios"),
+  contarEmprestimosAtivos: () =>
+    ipcRenderer.invoke("dashboard:contar-emprestimos-ativos"),
+  contarEmprestimosAtrasados: () =>
+    ipcRenderer.invoke("dashboard:contar-emprestimos-atrasados"),
 });

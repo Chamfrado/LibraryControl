@@ -5,10 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Bibliotecário Desktop</title>
     <link rel="stylesheet" href="./styles.css" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;"
+    />
   </head>
   <body>
     <div class="app">
       <h1>Bibliotecário Desktop</h1>
+      <p id="status"></p>
+
+      <section class="dashboard">
+        <div class="card">
+          <h3>Total de livros</h3>
+          <p id="cardTotalLivros">0</p>
+        </div>
+
+        <div class="card">
+          <h3>Total de usuários</h3>
+          <p id="cardTotalUsuarios">0</p>
+        </div>
+
+        <div class="card">
+          <h3>Empréstimos ativos</h3>
+          <p id="cardEmprestimosAtivos">0</p>
+        </div>
+
+        <div class="card card-alerta">
+          <h3>Empréstimos atrasados</h3>
+          <p id="cardEmprestimosAtrasados">0</p>
+        </div>
+      </section>
 
       <hr />
 
@@ -47,32 +74,24 @@
 
       <hr />
 
-      <h2>Empréstimos</h2>
-
-      <button id="btnCarregarEmprestimos">Carregar empréstimos</button>
-
-      <div id="resultadoEmprestimos"></div>
-
-      <hr />
-
       <h2>Usuários</h2>
-
       <input
         type="text"
         id="buscaUsuario"
         placeholder="Buscar usuário por nome..."
       />
       <button id="btnBuscarUsuario">Buscar usuário</button>
-
       <div id="resultadoUsuarios"></div>
 
+      <hr />
+
+      <h2>Acervo</h2>
       <input
         type="text"
         id="busca"
         placeholder="Buscar por título ou autor..."
       />
       <button id="btnBuscar">Buscar</button>
-
       <div id="resultado"></div>
     </div>
 
