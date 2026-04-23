@@ -24,12 +24,17 @@ document.getElementById("app").innerHTML = getLayout(
         <p id="cardEmprestimosAtrasados">0</p>
       </div>
     </section>
+    <div class="acoes-formulario">
+  <button id="btnFazerBackup">Fazer backup do banco</button>
+</div>
 
     <h3>Empréstimos atrasados</h3>
     <button id="btnCarregarAtrasados">Carregar atrasados</button>
     <div id="resultadoAtrasados"></div>
   `,
 );
+
+const btnFazerBackup = document.getElementById("btnFazerBackup");
 
 async function carregarDashboard() {
   const totalLivros = await window.api.contarAcervo();
@@ -87,6 +92,32 @@ document
       setStatus(`Erro ao carregar atrasados: ${error.message}`);
     }
   });
+
+btnFazerBackup.addEventListener("click", async () => {
+  try {
+    showLoadingModal("Gerando backup...");
+
+    const resultado = await window.api.fazerBackup();
+
+    hideLoadingModal();
+
+    if (resultado?.canceled) {
+      return;
+    }
+
+    await alertModal({
+      title: "Sucesso",
+      message: `Backup criado com sucesso.\n\nArquivo salvo em:\n${resultado.path}`,
+    });
+  } catch (error) {
+    hideLoadingModal();
+
+    await alertModal({
+      title: "Erro",
+      message: error.message,
+    });
+  }
+});
 
 (async function init() {
   try {

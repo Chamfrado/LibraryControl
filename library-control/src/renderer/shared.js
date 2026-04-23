@@ -9,6 +9,7 @@ function getLayout(activePage, contentHtml) {
         <a class="nav-link ${isActive("acervo")}" href="./acervo.html">Acervo</a>
         <a class="nav-link ${isActive("usuarios")}" href="./usuarios.html">Usuários</a>
         <a class="nav-link ${isActive("emprestimos")}" href="./emprestimos.html">Empréstimos</a>
+        <a class="nav-link ${isActive("configuracoes")}" href="./configuracoes.html">Configurações</a>
       </aside>
 
       <main class="content">

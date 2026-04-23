@@ -9,6 +9,7 @@ const {
   excluirLivro,
   listarCategoriasAcervo,
   listarTiposAcervo,
+  buscarLivroPorId,
 } = require("./db/acervo.repo");
 const {
   listarUsuarios,
@@ -29,6 +30,7 @@ const {
 } = require("./db/emprestimos.repo");
 
 const fs = require("fs");
+const { getDatabasePath } = require("./db/connection");
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -178,7 +180,9 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle("acervo:atualizar", (_, payload) => {
-    return atualizarLivro(payload.id, {
+    const livroAtual = buscarLivroPorId(payload.id);
+
+    const resultado = atualizarLivro(payload.id, {
       titulo: payload.titulo,
       autor: payload.autor,
       editora: payload.editora,
@@ -188,8 +192,24 @@ app.whenReady().then(() => {
       categoria: payload.categoria,
       tipo: payload.tipo,
     });
-  });
 
+    const capaAntiga = livroAtual?.capa;
+    const capaNova = payload.capa;
+
+    if (capaAntiga && capaNova && capaAntiga !== capaNova) {
+      const caminhoAntigo = path.join(
+        __dirname,
+        "../renderer/assets/livros",
+        capaAntiga,
+      );
+
+      if (fs.existsSync(caminhoAntigo)) {
+        fs.unlinkSync(caminhoAntigo);
+      }
+    }
+
+    return resultado;
+  });
   ipcMain.handle("usuario:criar", (_, payload) => {
     if (!payload?.nome?.trim()) {
       throw new Error("Nome é obrigatório.");
@@ -262,6 +282,65 @@ app.whenReady().then(() => {
 
   ipcMain.handle("acervo:listar-tipos", () => {
     return listarTiposAcervo();
+  });
+
+  ipcMain.handle("sistema:fazer-backup", async () => {
+    const origem = getDatabasePath();
+
+    if (!fs.existsSync(origem)) {
+      throw new Error("Banco de dados não encontrado.");
+    }
+
+    const agora = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+
+    const nomeArquivo = `bibliotecario-backup-${agora.getFullYear()}-${pad(agora.getMonth() + 1)}-${pad(agora.getDate())}_${pad(agora.getHours())}-${pad(agora.getMinutes())}-${pad(agora.getSeconds())}.db`;
+
+    const result = await dialog.showSaveDialog({
+      title: "Salvar backup do banco",
+      defaultPath: nomeArquivo,
+      filters: [{ name: "Banco SQLite", extensions: ["db"] }],
+    });
+
+    if (result.canceled || !result.filePath) {
+      return { canceled: true };
+    }
+
+    fs.copyFileSync(origem, result.filePath);
+
+    return {
+      canceled: false,
+      path: result.filePath,
+    };
+  });
+
+  ipcMain.handle("sistema:restaurar-backup", async () => {
+    const destino = getDatabasePath();
+
+    const result = await dialog.showOpenDialog({
+      title: "Selecionar backup do banco",
+      properties: ["openFile"],
+      filters: [{ name: "Banco SQLite", extensions: ["db"] }],
+    });
+
+    if (result.canceled || !result.filePaths.length) {
+      return { canceled: true };
+    }
+
+    const origem = result.filePaths[0];
+
+    if (!fs.existsSync(origem)) {
+      throw new Error("Arquivo de backup não encontrado.");
+    }
+
+    // fecha conexão atual com o banco, se necessário
+    // como seu connection.js mantém singleton, vamos sobrescrever o arquivo diretamente
+    fs.copyFileSync(origem, destino);
+
+    return {
+      canceled: false,
+      path: origem,
+    };
   });
 
   createWindow();

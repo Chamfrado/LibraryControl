@@ -1,16 +1,16 @@
-const Database = require('better-sqlite3');
-const { app } = require('electron');
-const path = require('node:path');
-const fs = require('node:fs');
+const Database = require("better-sqlite3");
+const { app } = require("electron");
+const path = require("node:path");
+const fs = require("node:fs");
 
 let db = null;
 
 function getDatabase() {
   if (db) return db;
 
-  const userDataPath = app.getPath('userData');
-  const dbPath = path.join(userDataPath, 'bibliotecario.db');
-  const bundledDb = path.join(app.getAppPath(), 'bibliotecario.db');
+  const userDataPath = app.getPath("userData");
+  const dbPath = path.join(userDataPath, "bibliotecario.db");
+  const bundledDb = path.join(app.getAppPath(), "bibliotecario.db");
 
   if (!fs.existsSync(dbPath) && fs.existsSync(bundledDb)) {
     fs.copyFileSync(bundledDb, dbPath);
@@ -20,4 +20,9 @@ function getDatabase() {
   return db;
 }
 
-module.exports = { getDatabase };
+function getDatabasePath() {
+  const userDataPath = app.getPath("userData");
+  return path.join(userDataPath, "bibliotecario.db");
+}
+
+module.exports = { getDatabase, getDatabasePath };

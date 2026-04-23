@@ -169,6 +169,21 @@ function listarTiposAcervo() {
     )
     .all();
 }
+
+function buscarLivroPorId(id) {
+  const db = getDatabase();
+
+  return db
+    .prepare(
+      `
+    SELECT id, capa
+    FROM cad_acervo
+    WHERE id = ?
+  `,
+    )
+    .get(id);
+}
+
 module.exports = {
   listarAcervo,
   buscarAcervo,
@@ -178,4 +193,5 @@ module.exports = {
   excluirLivro,
   listarCategoriasAcervo,
   listarTiposAcervo,
+  buscarLivroPorId,
 };

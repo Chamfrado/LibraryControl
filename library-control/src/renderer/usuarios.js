@@ -76,6 +76,8 @@ function limparFormulario() {
   usuarioEmail.value = "";
   usuarioEmEdicaoId = null;
   atualizarEstadoEdicaoUsuario();
+  statusUsuario.className = "status-box";
+  statusUsuario.textContent = "";
 }
 
 function renderUsuarios(lista) {

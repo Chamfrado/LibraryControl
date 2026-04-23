@@ -34,4 +34,6 @@ contextBridge.exposeInMainWorld("api", {
     ipcRenderer.invoke("emprestimo:buscar", payload),
   listarCategoriasAcervo: () => ipcRenderer.invoke("acervo:listar-categorias"),
   listarTiposAcervo: () => ipcRenderer.invoke("acervo:listar-tipos"),
+  fazerBackup: () => ipcRenderer.invoke("sistema:fazer-backup"),
+  restaurarBackup: () => ipcRenderer.invoke("sistema:restaurar-backup"),
 });

@@ -96,14 +96,14 @@ function limparFormulario() {
   livroTipo.value = "";
   caminhoImagemSelecionada = null;
   nomeImagemSelecionada.textContent = "Nenhuma imagem";
-  if (livro.capa) {
-    mostrarPreviewImagem(`./assets/livros/${encodeURIComponent(livro.capa)}`);
-  } else {
-    esconderPreviewImagem();
-  }
   livroEmEdicaoId = null;
-  atualizarEstadoEdicaoLivro();
+
   esconderPreviewImagem();
+
+  atualizarEstadoEdicaoLivro();
+
+  statusLivro.className = "status-box";
+  statusLivro.textContent = "";
 }
 
 function renderAcervo(lista) {
@@ -163,6 +163,13 @@ function renderAcervo(lista) {
       livroCategoria.value = livro.categoria ?? "";
       livroTipo.value = livro.tipo ?? "";
       nomeImagemSelecionada.textContent = livro.capa || "Nenhuma imagem";
+      if (livro.capa) {
+        mostrarPreviewImagem(
+          `./assets/livros/${encodeURIComponent(livro.capa)}`,
+        );
+      } else {
+        esconderPreviewImagem();
+      }
       atualizarEstadoEdicaoLivro();
       setBoxStatus(statusLivro, "Modo edição ativado.", "info");
 
@@ -293,6 +300,9 @@ btnCriarLivro.addEventListener("click", async () => {
       });
 
       hideLoadingModal();
+      limparFormulario();
+      await carregarAcervo();
+
       await alertModal({
         title: "Sucesso",
         message: "Livro atualizado com sucesso.",
@@ -310,14 +320,14 @@ btnCriarLivro.addEventListener("click", async () => {
       });
 
       hideLoadingModal();
+      limparFormulario();
+      await carregarAcervo();
+
       await alertModal({
         title: "Sucesso",
         message: "Livro cadastrado com sucesso.",
       });
     }
-
-    limparFormulario();
-    await carregarAcervo();
   } catch (error) {
     hideLoadingModal();
     await alertModal({
