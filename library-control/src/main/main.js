@@ -31,6 +31,8 @@ const {
   criarEmprestimo,
   registrarDevolucao,
   buscarEmprestimos,
+  listarHistoricoPorUsuario,
+  listarHistoricoPorLivro,
 } = require("./db/emprestimos.repo");
 
 const fs = require("fs");
@@ -536,6 +538,14 @@ app.whenReady().then(() => {
 
   ipcMain.handle("usuario:listar-com-resumo", () => {
     return listarUsuariosComResumo();
+  });
+
+  ipcMain.handle("historico:usuario", (_, userId) => {
+    return listarHistoricoPorUsuario(Number(userId));
+  });
+
+  ipcMain.handle("historico:livro", (_, acervoId) => {
+    return listarHistoricoPorLivro(Number(acervoId));
   });
 
   createWindow();

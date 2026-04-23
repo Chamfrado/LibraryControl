@@ -243,6 +243,52 @@ function buscarEmprestimos(termo, status) {
   return db.prepare(sql).all(...params);
 }
 
+function listarHistoricoPorUsuario(userId) {
+  const db = getDatabase();
+
+  const stmt = db.prepare(`
+    SELECT
+      e.id,
+      e.user_id,
+      e.acervo_id,
+      a.titulo AS livro,
+      e.data_atual,
+      e.data_devolucao,
+      e.devolvido,
+      e.data_entregue
+    FROM emprestimos e
+    JOIN cad_acervo a ON a.id = e.acervo_id
+    WHERE e.user_id = ?
+    ORDER BY e.id DESC
+    LIMIT 20
+  `);
+
+  return stmt.all(userId);
+}
+
+function listarHistoricoPorLivro(acervoId) {
+  const db = getDatabase();
+
+  const stmt = db.prepare(`
+    SELECT
+      e.id,
+      e.user_id,
+      e.acervo_id,
+      u.nome AS usuario,
+      e.data_atual,
+      e.data_devolucao,
+      e.devolvido,
+      e.data_entregue
+    FROM emprestimos e
+    JOIN cad_usuario u ON u.id = e.user_id
+    WHERE e.acervo_id = ?
+    ORDER BY e.id DESC
+    LIMIT 20
+  `);
+
+  return stmt.all(acervoId);
+}
+
 module.exports = {
   listarEmprestimos,
   criarEmprestimo,
@@ -251,4 +297,6 @@ module.exports = {
   contarEmprestimosAtivos,
   contarEmprestimosAtrasados,
   buscarEmprestimos,
+  listarHistoricoPorUsuario,
+  listarHistoricoPorLivro,
 };

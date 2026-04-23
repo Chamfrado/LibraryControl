@@ -247,6 +247,73 @@ function detalhesModal({ title = "Detalhes", content = "" }) {
   });
 }
 
+function formatarDataPtBr(data) {
+  if (!data) return "-";
+
+  const partes = String(data).split("-");
+  if (partes.length !== 3) return data;
+
+  const [ano, mes, dia] = partes;
+  return `${dia}/${mes}/${ano}`;
+}
+
+function getStatusHistorico(item) {
+  const devolvido = normalizarTexto(item.devolvido).includes("sim");
+
+  if (devolvido) {
+    return "Devolvido";
+  }
+
+  const hoje = new Date();
+  const hojeLocal = new Date(
+    hoje.getFullYear(),
+    hoje.getMonth(),
+    hoje.getDate(),
+  );
+
+  const [ano, mes, dia] = String(item.data_devolucao).split("-").map(Number);
+  const devolucao = new Date(ano, mes - 1, dia);
+
+  if (devolucao < hojeLocal) {
+    return "Atrasado";
+  }
+
+  return "Ativo";
+}
+
+function renderHistoricoTabela(lista, tipo = "usuario") {
+  if (!lista.length) {
+    return `<p class="detalhes-sub">Nenhum empréstimo encontrado.</p>`;
+  }
+
+  return `
+    <table>
+      <tr>
+        <th>${tipo === "usuario" ? "Livro" : "Usuário"}</th>
+        <th>Empréstimo</th>
+        <th>Prevista</th>
+        <th>Status</th>
+        <th>Entregue</th>
+      </tr>
+      ${lista
+        .map((item) => {
+          const status = getStatusHistorico(item);
+
+          return `
+            <tr>
+              <td>${tipo === "usuario" ? (item.livro ?? "") : (item.usuario ?? "")}</td>
+              <td>${formatarDataPtBr(item.data_atual)}</td>
+              <td>${formatarDataPtBr(item.data_devolucao)}</td>
+              <td>${status}</td>
+              <td>${formatarDataPtBr(item.data_entregue)}</td>
+            </tr>
+          `;
+        })
+        .join("")}
+    </table>
+  `;
+}
+
 function hideLoadingModal() {
   closeModal();
 }

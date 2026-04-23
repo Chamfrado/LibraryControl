@@ -46,4 +46,9 @@ contextBridge.exposeInMainWorld("api", {
   listarAcervoComResumo: () => ipcRenderer.invoke("acervo:listar-com-resumo"),
   listarUsuariosComResumo: () =>
     ipcRenderer.invoke("usuario:listar-com-resumo"),
+  listarHistoricoUsuario: (userId) =>
+    ipcRenderer.invoke("historico:usuario", userId),
+
+  listarHistoricoLivro: (acervoId) =>
+    ipcRenderer.invoke("historico:livro", acervoId),
 });

@@ -193,32 +193,37 @@ function renderAcervo(lista) {
           });
           return;
         }
-
+        const historico = await window.api.listarHistoricoLivro(livro.id);
         await detalhesModal({
           title: "Histórico do item do acervo",
           content: `
-          <div class="detalhes-grid">
-            <div>
-              ${
-                livro.capa
-                  ? `<img src="./assets/livros/${encodeURIComponent(livro.capa)}" alt="Capa" class="detalhes-capa" />`
-                  : `<div class="detalhes-capa sem-capa">Sem capa</div>`
-              }
-            </div>
-            <div class="detalhes-bloco">
-              <div class="detalhes-titulo">${livro.titulo ?? ""}</div>
-              <div class="detalhes-sub">Autor: ${livro.autor ?? "-"}</div>
-              <div class="detalhes-sub">Editora: ${livro.editora ?? "-"}</div>
-              <div class="detalhes-sub">ISBN: ${livro.isbn ?? "-"}</div>
-              <div class="detalhes-sub">Quantidade disponível: ${livro.quantidade ?? 0}</div>
-              <div class="detalhes-sub">Categoria: ${livro.categoria ?? "-"}</div>
-              <div class="detalhes-sub">Tipo: ${livro.tipo ?? "-"}</div>
-              <hr />
-              <div class="detalhes-sub">Total de empréstimos: ${livro.total_emprestimos ?? 0}</div>
-              <div class="detalhes-sub">Empréstimos ativos: ${livro.emprestimos_ativos ?? 0}</div>
-            </div>
-          </div>
-        `,
+                  <div class="detalhes-grid">
+                    <div>
+                      ${
+                        livro.capa
+                          ? `<img src="./assets/livros/${encodeURIComponent(livro.capa)}" alt="Capa" class="detalhes-capa" />`
+                          : `<div class="detalhes-capa sem-capa">Sem capa</div>`
+                      }
+                    </div>
+                    <div class="detalhes-bloco">
+                      <div class="detalhes-titulo">${livro.titulo ?? ""}</div>
+                      <div class="detalhes-sub">Autor: ${livro.autor ?? "-"}</div>
+                      <div class="detalhes-sub">Editora: ${livro.editora ?? "-"}</div>
+                      <div class="detalhes-sub">ISBN: ${livro.isbn ?? "-"}</div>
+                      <div class="detalhes-sub">Quantidade disponível: ${livro.quantidade ?? 0}</div>
+                      <div class="detalhes-sub">Categoria: ${livro.categoria ?? "-"}</div>
+                      <div class="detalhes-sub">Tipo: ${livro.tipo ?? "-"}</div>
+                      <hr />
+                      <div class="detalhes-sub">Total de empréstimos: ${livro.total_emprestimos ?? 0}</div>
+                      <div class="detalhes-sub">Empréstimos ativos: ${livro.emprestimos_ativos ?? 0}</div>
+                    </div>
+                  </div>
+                    
+                  <hr />
+                    
+                  <h3>Histórico de empréstimos</h3>
+                  ${renderHistoricoTabela(historico, "livro")}
+                `,
         });
       } catch (error) {
         await alertModal({
