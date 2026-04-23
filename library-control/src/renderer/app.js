@@ -26,6 +26,9 @@ const cardEmprestimosAtrasados = document.getElementById(
   "cardEmprestimosAtrasados",
 );
 
+const navButtons = document.querySelectorAll(".nav-btn");
+const pages = document.querySelectorAll(".page");
+
 function setStatus(message) {
   if (statusEl) {
     statusEl.textContent = message;
@@ -37,6 +40,7 @@ function renderAcervo(lista) {
     <h2>Acervo - Total: ${lista.length}</h2>
     <table>
       <tr>
+        <th>Capa</th>
         <th>Título</th>
         <th>Autor</th>
         <th>Editora</th>
@@ -50,6 +54,13 @@ function renderAcervo(lista) {
 
           return `
           <tr>
+            <td>
+              ${
+                l.capa
+                  ? `<img src="./assets/livros/${encodeURIComponent(l.capa)}" alt="Capa de ${l.titulo ?? "livro"}" class="capa-livro" />`
+                  : "-"
+              }
+            </td>
             <td>${l.titulo ?? ""}</td>
             <td>${l.autor ?? ""}</td>
             <td>${l.editora ?? ""}</td>
@@ -373,4 +384,33 @@ async function carregarDashboard() {
   }
 }
 
+function abrirPagina(nome) {
+  pages.forEach((page) => {
+    page.classList.remove("active");
+  });
+
+  navButtons.forEach((button) => {
+    button.classList.remove("active");
+  });
+
+  const pagina = document.getElementById(`page-${nome}`);
+  if (pagina) {
+    pagina.classList.add("active");
+  }
+
+  const botaoAtivo = document.querySelector(`.nav-btn[data-page="${nome}"]`);
+  if (botaoAtivo) {
+    botaoAtivo.classList.add("active");
+  }
+}
+
+function bindNavegacao() {
+  navButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      abrirPagina(button.dataset.page);
+    });
+  });
+}
+
+bindNavegacao();
 carregarInicial();

@@ -1,100 +1,103 @@
-<!doctype html>
-<html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Bibliotecário Desktop</title>
-    <link rel="stylesheet" href="./styles.css" />
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;"
-    />
-  </head>
-  <body>
-    <div class="app">
-      <h1>Bibliotecário Desktop</h1>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <h1>Bibliotecário</h1>
+
+      <button class="nav-btn active" data-page="dashboard">Dashboard</button>
+      <button class="nav-btn" data-page="acervo">Acervo</button>
+      <button class="nav-btn" data-page="usuarios">Usuários</button>
+      <button class="nav-btn" data-page="emprestimos">Empréstimos</button>
+    </aside>
+
+    <main class="content">
       <p id="status"></p>
 
-      <section class="dashboard">
-        <div class="card">
-          <h3>Total de livros</h3>
-          <p id="cardTotalLivros">0</p>
-        </div>
+      <section id="page-dashboard" class="page active">
+        <h2>Dashboard</h2>
 
-        <div class="card">
-          <h3>Total de usuários</h3>
-          <p id="cardTotalUsuarios">0</p>
-        </div>
+        <section class="dashboard">
+          <div class="card">
+            <h3>Total de livros</h3>
+            <p id="cardTotalLivros">0</p>
+          </div>
 
-        <div class="card">
-          <h3>Empréstimos ativos</h3>
-          <p id="cardEmprestimosAtivos">0</p>
-        </div>
+          <div class="card">
+            <h3>Total de usuários</h3>
+            <p id="cardTotalUsuarios">0</p>
+          </div>
 
-        <div class="card card-alerta">
-          <h3>Empréstimos atrasados</h3>
-          <p id="cardEmprestimosAtrasados">0</p>
-        </div>
+          <div class="card">
+            <h3>Empréstimos ativos</h3>
+            <p id="cardEmprestimosAtivos">0</p>
+          </div>
+
+          <div class="card card-alerta">
+            <h3>Empréstimos atrasados</h3>
+            <p id="cardEmprestimosAtrasados">0</p>
+          </div>
+        </section>
+
+        <h3>Empréstimos atrasados</h3>
+        <button id="btnCarregarAtrasados">Carregar atrasados</button>
+        <div id="resultadoAtrasados"></div>
       </section>
 
-      <hr />
+      <section id="page-acervo" class="page">
+        <h2>Acervo</h2>
 
-      <h2>Empréstimos atrasados</h2>
-      <button id="btnCarregarAtrasados">Carregar atrasados</button>
-      <div id="resultadoAtrasados"></div>
+        <input
+          type="text"
+          id="busca"
+          placeholder="Buscar por título ou autor..."
+        />
+        <button id="btnBuscar">Buscar</button>
 
-      <hr />
+        <div id="resultado"></div>
+      </section>
 
-      <h2>Criar empréstimo</h2>
+      <section id="page-usuarios" class="page">
+        <h2>Usuários</h2>
 
-      <div class="form-emprestimo">
-        <label for="selectUsuario">Usuário</label>
-        <select id="selectUsuario">
-          <option value="">Selecione um usuário</option>
-        </select>
+        <input
+          type="text"
+          id="buscaUsuario"
+          placeholder="Buscar usuário por nome..."
+        />
+        <button id="btnBuscarUsuario">Buscar usuário</button>
 
-        <label for="selectLivro">Livro</label>
-        <select id="selectLivro">
-          <option value="">Selecione um livro</option>
-        </select>
+        <div id="resultadoUsuarios"></div>
+      </section>
 
-        <label for="inputDias">Quantidade de dias</label>
-        <input type="number" id="inputDias" min="1" value="7" />
+      <section id="page-emprestimos" class="page">
+        <h2>Criar empréstimo</h2>
 
-        <button id="btnCriarEmprestimo">Criar empréstimo</button>
-      </div>
+        <div class="form-emprestimo">
+          <label for="selectUsuario">Usuário</label>
+          <select id="selectUsuario">
+            <option value="">Selecione um usuário</option>
+          </select>
 
-      <div id="statusEmprestimo"></div>
+          <label for="selectLivro">Livro</label>
+          <select id="selectLivro">
+            <option value="">Selecione um livro</option>
+          </select>
 
-      <hr />
+          <label for="inputDias">Quantidade de dias</label>
+          <input type="number" id="inputDias" min="1" value="7" />
 
-      <h2>Empréstimos</h2>
-      <button id="btnCarregarEmprestimos">Carregar empréstimos</button>
-      <div id="resultadoEmprestimos"></div>
+          <button id="btnCriarEmprestimo">Criar empréstimo</button>
+        </div>
 
-      <hr />
+        <div id="statusEmprestimo"></div>
 
-      <h2>Usuários</h2>
-      <input
-        type="text"
-        id="buscaUsuario"
-        placeholder="Buscar usuário por nome..."
-      />
-      <button id="btnBuscarUsuario">Buscar usuário</button>
-      <div id="resultadoUsuarios"></div>
+        <hr />
 
-      <hr />
+        <h2>Empréstimos</h2>
+        <button id="btnCarregarEmprestimos">Carregar empréstimos</button>
+        <div id="resultadoEmprestimos"></div>
+      </section>
+    </main>
+  </div>
 
-      <h2>Acervo</h2>
-      <input
-        type="text"
-        id="busca"
-        placeholder="Buscar por título ou autor..."
-      />
-      <button id="btnBuscar">Buscar</button>
-      <div id="resultado"></div>
-    </div>
-
-    <script src="./app.js"></script>
-  </body>
-</html>
+  <script src="./app.js"></script>
+</body>

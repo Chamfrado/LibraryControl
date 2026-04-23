@@ -10,18 +10,27 @@ function listarAcervo() {
       autor,
       editora,
       isbn,
-      quantidade
+      quantidade,
+      capa
     FROM cad_acervo
     ORDER BY titulo
   `);
 
   return stmt.all();
 }
+
 function buscarAcervo(termo) {
   const db = getDatabase();
 
   const stmt = db.prepare(`
-    SELECT id, titulo, autor, editora, isbn, quantidade
+    SELECT
+      id,
+      titulo,
+      autor,
+      editora,
+      isbn,
+      quantidade,
+      capa
     FROM cad_acervo
     WHERE titulo LIKE ? OR autor LIKE ?
     ORDER BY titulo
@@ -29,7 +38,6 @@ function buscarAcervo(termo) {
 
   return stmt.all(`%${termo}%`, `%${termo}%`);
 }
-
 function contarAcervo() {
   const db = getDatabase();
 

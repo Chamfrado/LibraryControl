@@ -90,3 +90,11 @@ typings/
 
 # Electron-Forge
 out/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Assets (images)
+src/renderer/assets/
