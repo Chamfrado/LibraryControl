@@ -42,7 +42,6 @@ document.getElementById("app").innerHTML = getLayout(
 
       <button id="btnBuscarEmprestimos">Buscar</button>
     </div>
-    <button id="btnCarregarEmprestimos">Carregar empréstimos</button>
     <div id="resultadoEmprestimos"></div>
   `,
 );
@@ -277,16 +276,6 @@ btnEmprestimos.addEventListener("click", async () => {
   }
 });
 
-(async function init() {
-  try {
-    setStatus("Carregando empréstimos...");
-    await carregarTudo();
-    setStatus("");
-  } catch (error) {
-    setStatus(`Erro ao carregar empréstimos: ${error.message}`);
-  }
-})();
-
 function getStatusEmprestimo(e) {
   const jaDevolvido = normalizarTexto(e.devolvido).includes("sim");
   const atrasado =
@@ -299,3 +288,13 @@ function getStatusEmprestimo(e) {
   if (atrasado) return "Atrasado";
   return "Ativo";
 }
+
+(async function init() {
+  try {
+    setStatus("Carregando empréstimos...");
+    await carregarTudo();
+    setStatus("");
+  } catch (error) {
+    setStatus(`Erro ao carregar empréstimos: ${error.message}`);
+  }
+})();

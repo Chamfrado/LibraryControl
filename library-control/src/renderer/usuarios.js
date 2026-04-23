@@ -27,9 +27,11 @@ document.getElementById("app").innerHTML = getLayout(
       <label for="usuarioEmail">E-mail</label>
       <input id="usuarioEmail" placeholder="E-mail" />
       <div class="acoes-formulario">
+  <div class="acoes-formulario">
   <button id="btnSalvarUsuario">Salvar usuário</button>
-  <button id="btnCancelarEdicaoUsuario" type="button">Cancelar edição</button>
+  <button id="btnCancelarEdicaoUsuario" type="button" class="hidden">Cancelar edição</button>
   <button id="btnLimparUsuario" type="button">Limpar formulário</button>
+</div>
 </div>
     </div>
 
@@ -75,7 +77,7 @@ function limparFormulario() {
   usuarioFone.value = "";
   usuarioEmail.value = "";
   usuarioEmEdicaoId = null;
-  btnSalvarUsuario.textContent = "Salvar usuário";
+  atualizarEstadoEdicaoUsuario();
 }
 
 function renderUsuarios(lista) {
@@ -126,7 +128,7 @@ function renderUsuarios(lista) {
       usuarioTurma.value = usuario.turma ?? "";
       usuarioFone.value = usuario.fone ?? "";
       usuarioEmail.value = usuario.email ?? "";
-      btnSalvarUsuario.textContent = "Atualizar usuário";
+      atualizarEstadoEdicaoUsuario();
       setBoxStatus(statusUsuario, "Modo edição ativado.", "info");
 
       renderUsuarios([usuario]);
@@ -136,14 +138,38 @@ function renderUsuarios(lista) {
   document.querySelectorAll(".btn-excluir-usuario").forEach((btn) => {
     btn.addEventListener("click", async () => {
       try {
-        if (!confirm("Deseja excluir este usuário?")) return;
+        const confirmado = await confirmModal({
+          title: "Excluir usuário",
+          message: "Deseja realmente excluir este usuário?",
+        });
+
+        if (!confirmado) return;
+
         await window.api.excluirUsuario(btn.dataset.id);
+
         await carregarUsuarios();
+        await alertModal({
+          title: "Sucesso",
+          message: "Usuário excluído com sucesso.",
+        });
       } catch (error) {
-        alert(error.message);
+        await alertModal({
+          title: "Erro",
+          message: error.message,
+        });
       }
     });
   });
+}
+
+function atualizarEstadoEdicaoUsuario() {
+  if (usuarioEmEdicaoId) {
+    btnCancelarEdicaoUsuario.classList.remove("hidden");
+    btnSalvarUsuario.textContent = "Atualizar usuário";
+  } else {
+    btnCancelarEdicaoUsuario.classList.add("hidden");
+    btnSalvarUsuario.textContent = "Salvar usuário";
+  }
 }
 
 async function cancelarEdicaoUsuario() {
@@ -151,6 +177,10 @@ async function cancelarEdicaoUsuario() {
   await carregarUsuarios();
   setBoxStatus(statusUsuario, "Edição cancelada.", "info");
 }
+
+btnCancelarEdicaoUsuario.addEventListener("click", async () => {
+  await cancelarEdicaoUsuario();
+});
 
 async function carregarUsuarios() {
   const usuarios = await window.api.listarUsuarios();
@@ -247,6 +277,7 @@ btnLimparUsuario.addEventListener("click", () => {
   try {
     setStatus("Carregando usuários...");
     await carregarUsuarios();
+    atualizarEstadoEdicaoUsuario();
     setStatus("");
   } catch (error) {
     setStatus(`Erro ao carregar usuários: ${error.message}`);

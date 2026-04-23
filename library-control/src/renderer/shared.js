@@ -48,3 +48,74 @@ function normalizarTexto(valor) {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 }
+
+function ensureModalRoot() {
+  let root = document.getElementById("modal-root");
+
+  if (!root) {
+    root = document.createElement("div");
+    root.id = "modal-root";
+    document.body.appendChild(root);
+  }
+
+  return root;
+}
+
+function closeModal() {
+  const root = document.getElementById("modal-root");
+  if (root) {
+    root.innerHTML = "";
+  }
+}
+
+function confirmModal({ title = "Confirmar", message = "Deseja continuar?" }) {
+  return new Promise((resolve) => {
+    const root = ensureModalRoot();
+
+    root.innerHTML = `
+      <div class="modal-overlay">
+        <div class="modal">
+          <div class="modal-header">${title}</div>
+          <div class="modal-body">${message}</div>
+          <div class="modal-actions">
+            <button id="modal-cancelar" class="btn-secondary">Cancelar</button>
+            <button id="modal-confirmar" class="btn-danger">Confirmar</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("modal-cancelar").addEventListener("click", () => {
+      closeModal();
+      resolve(false);
+    });
+
+    document.getElementById("modal-confirmar").addEventListener("click", () => {
+      closeModal();
+      resolve(true);
+    });
+  });
+}
+
+function alertModal({ title = "Aviso", message = "" }) {
+  return new Promise((resolve) => {
+    const root = ensureModalRoot();
+
+    root.innerHTML = `
+      <div class="modal-overlay">
+        <div class="modal">
+          <div class="modal-header">${title}</div>
+          <div class="modal-body">${message}</div>
+          <div class="modal-actions">
+            <button id="modal-ok" class="btn-secondary">OK</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("modal-ok").addEventListener("click", () => {
+      closeModal();
+      resolve();
+    });
+  });
+}

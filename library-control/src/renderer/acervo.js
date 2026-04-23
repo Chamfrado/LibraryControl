@@ -33,8 +33,8 @@ document.getElementById("app").innerHTML = getLayout(
   <span id="nomeImagemSelecionada">Nenhuma imagem</span>
   <div class="acoes-formulario">
  
-  <button id="btnCriarLivro">Salvar livro</button>
-  <button id="btnCancelarEdicaoLivro" type="button">Cancelar edição</button>
+    <button id="btnCriarLivro">Salvar livro</button>
+  <button id="btnCancelarEdicaoLivro" type="button" class="hidden">Cancelar edição</button>
   <button id="btnLimparLivro" type="button">Limpar formulário</button>
 </div>
 
@@ -90,7 +90,7 @@ function limparFormulario() {
   caminhoImagemSelecionada = null;
   nomeImagemSelecionada.textContent = "Nenhuma imagem";
   livroEmEdicaoId = null;
-  btnCriarLivro.textContent = "Salvar livro";
+  atualizarEstadoEdicaoLivro();
 }
 
 function renderAcervo(lista) {
@@ -150,7 +150,7 @@ function renderAcervo(lista) {
       livroCategoria.value = livro.categoria ?? "";
       livroTipo.value = livro.tipo ?? "";
       nomeImagemSelecionada.textContent = livro.capa || "Nenhuma imagem";
-      btnCriarLivro.textContent = "Atualizar livro";
+      atualizarEstadoEdicaoLivro();
       setBoxStatus(statusLivro, "Modo edição ativado.", "info");
 
       renderAcervo([livro]);
@@ -160,11 +160,25 @@ function renderAcervo(lista) {
   document.querySelectorAll(".btn-excluir").forEach((btn) => {
     btn.addEventListener("click", async () => {
       try {
-        if (!confirm("Deseja realmente excluir este livro?")) return;
+        const confirmado = await confirmModal({
+          title: "Excluir livro",
+          message: "Deseja realmente excluir este livro?",
+        });
+
+        if (!confirmado) return;
+
         await window.api.excluirLivro(btn.dataset.id);
+
         await carregarAcervo();
+        await alertModal({
+          title: "Sucesso",
+          message: "Livro excluído com sucesso.",
+        });
       } catch (error) {
-        alert(error.message);
+        await alertModal({
+          title: "Erro",
+          message: error.message,
+        });
       }
     });
   });
@@ -266,6 +280,16 @@ btnCriarLivro.addEventListener("click", async () => {
   }
 });
 
+function atualizarEstadoEdicaoLivro() {
+  if (livroEmEdicaoId) {
+    btnCancelarEdicaoLivro.classList.remove("hidden");
+    btnCriarLivro.textContent = "Atualizar livro";
+  } else {
+    btnCancelarEdicaoLivro.classList.add("hidden");
+    btnCriarLivro.textContent = "Salvar livro";
+  }
+}
+
 btnBuscar.addEventListener("click", async () => {
   try {
     const termo = inputBusca.value.trim();
@@ -327,8 +351,10 @@ btnLimparLivro.addEventListener("click", () => {
 (async function init() {
   try {
     setStatus("Carregando acervo...");
+
     await carregarCategoriasETipos();
     await carregarAcervo();
+    atualizarEstadoEdicaoLivro();
     setStatus("");
   } catch (error) {
     setStatus(`Erro ao carregar acervo: ${error.message}`);
