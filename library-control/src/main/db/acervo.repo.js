@@ -5,17 +5,21 @@ function listarAcervo() {
 
   const stmt = db.prepare(`
     SELECT
-      id,
-      titulo,
-      autor,
-      editora,
-      isbn,
-      quantidade,
-      capa,
-      categoria,
-      tipo
-    FROM cad_acervo
-    ORDER BY titulo
+      a.id,
+      a.titulo,
+      a.autor,
+      a.editora,
+      a.isbn,
+      a.quantidade,
+      a.capa,
+      a.categoria,
+      a.tipo,
+      c.titulo AS categoria_nome,
+      t.descricao AS tipo_nome
+    FROM cad_acervo a
+    LEFT JOIN cad_categoria c ON c.id = a.categoria
+    LEFT JOIN cad_tipo t ON t.id = a.tipo
+    ORDER BY a.titulo
   `);
 
   return stmt.all();
@@ -26,18 +30,22 @@ function buscarAcervo(termo) {
 
   const stmt = db.prepare(`
     SELECT
-      id,
-      titulo,
-      autor,
-      editora,
-      isbn,
-      quantidade,
-      capa,
-      categoria,
-      tipo
-    FROM cad_acervo
-    WHERE titulo LIKE ? OR autor LIKE ?
-    ORDER BY titulo
+      a.id,
+      a.titulo,
+      a.autor,
+      a.editora,
+      a.isbn,
+      a.quantidade,
+      a.capa,
+      a.categoria,
+      a.tipo,
+      c.titulo AS categoria_nome,
+      t.descricao AS tipo_nome
+    FROM cad_acervo a
+    LEFT JOIN cad_categoria c ON c.id = a.categoria
+    LEFT JOIN cad_tipo t ON t.id = a.tipo
+    WHERE a.titulo LIKE ? OR a.autor LIKE ?
+    ORDER BY a.titulo
   `);
 
   return stmt.all(`%${termo}%`, `%${termo}%`);
@@ -198,6 +206,8 @@ function listarAcervoComResumo() {
       a.capa,
       a.categoria,
       a.tipo,
+      c.titulo AS categoria_nome,
+      t.descricao AS tipo_nome,
       COUNT(e.id) AS total_emprestimos,
       SUM(
         CASE
@@ -206,9 +216,13 @@ function listarAcervoComResumo() {
         END
       ) AS emprestimos_ativos
     FROM cad_acervo a
+    LEFT JOIN cad_categoria c ON c.id = a.categoria
+    LEFT JOIN cad_tipo t ON t.id = a.tipo
     LEFT JOIN emprestimos e ON e.acervo_id = a.id
     GROUP BY
-      a.id, a.titulo, a.autor, a.editora, a.isbn, a.quantidade, a.capa, a.categoria, a.tipo
+      a.id, a.titulo, a.autor, a.editora, a.isbn,
+      a.quantidade, a.capa, a.categoria, a.tipo,
+      c.titulo, t.descricao
     ORDER BY a.titulo
   `);
 

@@ -115,6 +115,8 @@ function renderAcervo(lista) {
         <th>Título</th>
         <th>Autor</th>
         <th>Editora</th>
+        <th>Categoria</th>
+        <th>Tipo</th>
         <th>Qtd</th>
         <th>Status</th>
         <th>Ações</th>
@@ -136,6 +138,8 @@ function renderAcervo(lista) {
             <td>${l.titulo ?? ""}</td>
             <td>${l.autor ?? ""}</td>
             <td>${l.editora ?? ""}</td>
+            <td>${l.categoria_nome ?? l.categoria ?? "-"}</td>
+            <td>${l.tipo_nome ?? l.tipo ?? "-"}</td>
             <td>${qtd}</td>
             <td>${status}</td>
             <td>
@@ -211,8 +215,8 @@ function renderAcervo(lista) {
                       <div class="detalhes-sub">Editora: ${livro.editora ?? "-"}</div>
                       <div class="detalhes-sub">ISBN: ${livro.isbn ?? "-"}</div>
                       <div class="detalhes-sub">Quantidade disponível: ${livro.quantidade ?? 0}</div>
-                      <div class="detalhes-sub">Categoria: ${livro.categoria ?? "-"}</div>
-                      <div class="detalhes-sub">Tipo: ${livro.tipo ?? "-"}</div>
+                      <div class="detalhes-sub">Categoria: ${livro.categoria_nome ?? livro.categoria ?? "-"}</div>
+                      <div class="detalhes-sub">Tipo: ${livro.tipo_nome ?? livro.tipo ?? "-"}</div>
                       <hr />
                       <div class="detalhes-sub">Total de empréstimos: ${livro.total_emprestimos ?? 0}</div>
                       <div class="detalhes-sub">Empréstimos ativos: ${livro.emprestimos_ativos ?? 0}</div>
