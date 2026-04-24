@@ -1,117 +1,176 @@
 document.getElementById("app").innerHTML = getLayout(
   "dashboard",
   `
-    <h2>Dashboard</h2>
+    <div class="page-header">
+      <div>
+        <h1>Dashboard</h1>
+        <p>Visão geral do sistema bibliotecário</p>
+      </div>
+    </div>
 
-    <section class="dashboard">
-      <div class="card">
-        <h3>Total de livros</h3>
-        <p id="cardTotalLivros">0</p>
+    <section class="stats-grid">
+      <div class="stat-card">
+        <span>Total de livros</span>
+        <strong id="cardTotalLivros">0</strong>
+        <small>Itens cadastrados no acervo</small>
       </div>
 
-      <div class="card">
-        <h3>Total de usuários</h3>
-        <p id="cardTotalUsuarios">0</p>
+      <div class="stat-card">
+        <span>Total de usuários</span>
+        <strong id="cardTotalUsuarios">0</strong>
+        <small>Usuários cadastrados</small>
       </div>
 
-      <div class="card">
-        <h3>Empréstimos ativos</h3>
-        <p id="cardEmprestimosAtivos">0</p>
+      <div class="stat-card">
+        <span>Empréstimos ativos</span>
+        <strong id="cardEmprestimosAtivos">0</strong>
+        <small>Atualmente emprestados</small>
       </div>
 
-      <div class="card card-alerta">
-        <h3>Empréstimos atrasados</h3>
-        <p id="cardEmprestimosAtrasados">0</p>
+      <div class="stat-card danger">
+        <span>Empréstimos atrasados</span>
+        <strong id="cardEmprestimosAtrasados">0</strong>
+        <small>Precisam de atenção</small>
       </div>
     </section>
-    <div class="acoes-formulario">
-  <button id="btnFazerBackup">Fazer backup do banco</button>
-</div>
 
-    <h3>Empréstimos atrasados</h3>
-    <button id="btnCarregarAtrasados">Carregar atrasados</button>
-    <div id="resultadoAtrasados"></div>
+    <section class="dashboard-grid">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Empréstimos atrasados</h2>
+            <p>Itens que passaram da data prevista de devolução</p>
+          </div>
+          <button id="btnAtualizarDashboard" class="btn-primary">Atualizar</button>
+        </div>
+
+        <div id="resultadoAtrasados"></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Ações rápidas</h2>
+            <p>Acesse as principais rotinas do sistema</p>
+          </div>
+        </div>
+
+        <div class="quick-actions">
+          <a href="./emprestimos.html" class="quick-card">Novo empréstimo</a>
+          <a href="./acervo.html" class="quick-card">Cadastrar livro</a>
+          <a href="./usuarios.html" class="quick-card">Novo usuário</a>
+          <a href="./configuracoes.html" class="quick-card">Importar CSV</a>
+        </div>
+      </div>
+    </section>
   `,
 );
 
-const btnFazerBackup = document.getElementById("btnFazerBackup");
+const cardTotalLivros = document.getElementById("cardTotalLivros");
+const cardTotalUsuarios = document.getElementById("cardTotalUsuarios");
+const cardEmprestimosAtivos = document.getElementById("cardEmprestimosAtivos");
+const cardEmprestimosAtrasados = document.getElementById(
+  "cardEmprestimosAtrasados",
+);
+const resultadoAtrasados = document.getElementById("resultadoAtrasados");
+const btnAtualizarDashboard = document.getElementById("btnAtualizarDashboard");
+
+function formatarDataPtBr(data) {
+  if (!data) return "-";
+
+  const [ano, mes, dia] = String(data).split("-");
+  if (!ano || !mes || !dia) return data;
+
+  return `${dia}/${mes}/${ano}`;
+}
+
+function calcularDiasAtraso(dataDevolucao) {
+  if (!dataDevolucao) return 0;
+
+  const hoje = new Date();
+  const hojeLocal = new Date(
+    hoje.getFullYear(),
+    hoje.getMonth(),
+    hoje.getDate(),
+  );
+
+  const [ano, mes, dia] = String(dataDevolucao).split("-").map(Number);
+  const devolucao = new Date(ano, mes - 1, dia);
+
+  const diff = hojeLocal - devolucao;
+  return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+}
 
 async function carregarDashboard() {
-  const totalLivros = await window.api.contarAcervo();
-  const totalUsuarios = await window.api.contarUsuarios();
-  const totalAtivos = await window.api.contarEmprestimosAtivos();
-  const totalAtrasados = await window.api.contarEmprestimosAtrasados();
+  const [totalLivros, totalUsuarios, totalAtivos, totalAtrasados, atrasados] =
+    await Promise.all([
+      window.api.contarAcervo(),
+      window.api.contarUsuarios(),
+      window.api.contarEmprestimosAtivos(),
+      window.api.contarEmprestimosAtrasados(),
+      window.api.listarEmprestimosAtrasados(),
+    ]);
 
-  document.getElementById("cardTotalLivros").textContent =
-    totalLivros?.total ?? 0;
-  document.getElementById("cardTotalUsuarios").textContent =
-    totalUsuarios?.total ?? 0;
-  document.getElementById("cardEmprestimosAtivos").textContent =
-    totalAtivos?.total ?? 0;
-  document.getElementById("cardEmprestimosAtrasados").textContent =
-    totalAtrasados?.total ?? 0;
+  cardTotalLivros.textContent = totalLivros?.total ?? 0;
+  cardTotalUsuarios.textContent = totalUsuarios?.total ?? 0;
+  cardEmprestimosAtivos.textContent = totalAtivos?.total ?? 0;
+  cardEmprestimosAtrasados.textContent = totalAtrasados?.total ?? 0;
+
+  renderAtrasados(atrasados ?? []);
 }
 
 function renderAtrasados(lista) {
-  document.getElementById("resultadoAtrasados").innerHTML = `
-    <h2>Atrasados - Total: ${lista.length}</h2>
-    <table>
-      <tr>
-        <th>Usuário</th>
-        <th>Livro</th>
-        <th>Data do empréstimo</th>
-        <th>Data limite</th>
-      </tr>
-      ${lista
-        .map(
-          (item) => `
-        <tr class="atrasado">
-          <td>${item.usuario ?? ""}</td>
-          <td>${item.livro ?? ""}</td>
-          <td>${item.data_atual ?? ""}</td>
-          <td>${item.data_devolucao ?? ""}</td>
-        </tr>
-      `,
-        )
-        .join("")}
-    </table>
+  if (!lista.length) {
+    resultadoAtrasados.innerHTML = `
+      <div class="empty-state">
+        Nenhum empréstimo atrasado no momento.
+      </div>
+    `;
+    return;
+  }
+
+  resultadoAtrasados.innerHTML = `
+    <div class="table-wrapper">
+      <table class="modern-table">
+        <thead>
+          <tr>
+            <th>Usuário</th>
+            <th>Livro</th>
+            <th>Empréstimo</th>
+            <th>Devolução</th>
+            <th>Atraso</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${lista
+            .map((item) => {
+              const dias = calcularDiasAtraso(item.data_devolucao);
+
+              return `
+                <tr>
+                  <td>${item.usuario ?? ""}</td>
+                  <td>${item.livro ?? ""}</td>
+                  <td>${formatarDataPtBr(item.data_atual)}</td>
+                  <td>${formatarDataPtBr(item.data_devolucao)}</td>
+                  <td>
+                    <span class="badge-status badge-atrasado">
+                      ${dias} dia${dias === 1 ? "" : "s"}
+                    </span>
+                  </td>
+                </tr>
+              `;
+            })
+            .join("")}
+        </tbody>
+      </table>
+    </div>
   `;
 }
 
-async function carregarAtrasados() {
-  const lista = await window.api.listarEmprestimosAtrasados();
-  renderAtrasados(lista);
-}
-
-document
-  .getElementById("btnCarregarAtrasados")
-  .addEventListener("click", async () => {
-    try {
-      await carregarAtrasados();
-    } catch (error) {
-      setStatus(`Erro ao carregar atrasados: ${error.message}`);
-    }
-  });
-
-btnFazerBackup.addEventListener("click", async () => {
+btnAtualizarDashboard.addEventListener("click", async () => {
   try {
-    showLoadingModal("Gerando backup...");
-
-    const resultado = await window.api.fazerBackup();
-
-    hideLoadingModal();
-
-    if (resultado?.canceled) {
-      return;
-    }
-
-    await alertModal({
-      title: "Sucesso",
-      message: `Backup criado com sucesso.\n\nArquivo salvo em:\n${resultado.path}`,
-    });
+    await carregarDashboard();
   } catch (error) {
-    hideLoadingModal();
-
     await alertModal({
       title: "Erro",
       message: error.message,
@@ -121,11 +180,11 @@ btnFazerBackup.addEventListener("click", async () => {
 
 (async function init() {
   try {
-    setStatus("Carregando dados...");
     await carregarDashboard();
-    await carregarAtrasados();
-    setStatus("");
   } catch (error) {
-    setStatus(`Erro ao carregar dashboard: ${error.message}`);
+    await alertModal({
+      title: "Erro ao carregar dashboard",
+      message: error.message,
+    });
   }
 })();

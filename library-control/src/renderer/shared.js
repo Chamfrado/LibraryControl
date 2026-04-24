@@ -1,23 +1,56 @@
-function getLayout(activePage, contentHtml) {
-  const isActive = (page) => (page === activePage ? "active" : "");
-
+function getLayout(active, content) {
   return `
-    <div class="layout">
+    <div class="app">
+      
+      <!-- SIDEBAR -->
       <aside class="sidebar">
-        <h1>Bibliotecário</h1>
-        <a class="nav-link ${isActive("dashboard")}" href="./index.html">Dashboard</a>
-        <a class="nav-link ${isActive("acervo")}" href="./acervo.html">Acervo</a>
-        <a class="nav-link ${isActive("usuarios")}" href="./usuarios.html">Usuários</a>
-        <a class="nav-link ${isActive("emprestimos")}" href="./emprestimos.html">Empréstimos</a>
-        <a class="nav-link ${isActive("configuracoes")}" href="./configuracoes.html">Configurações</a>
-        <a class="nav-link ${isActive("creditos")}" href="./creditos.html">Créditos</a>
+        <div class="sidebar-header">
+          <h2>📚 Library</h2>
+        </div>
+
+        <nav class="sidebar-nav">
+          ${navLink("dashboard", "Dashboard", "dashboard")}
+          ${navLink("usuarios", "Users", "users")}
+          ${navLink("acervo", "Acervo", "books")}
+          ${navLink("emprestimos", "Loans", "loans")}
+          ${navLink("inadimplentes", "Overdue", "alert")}
+          ${navLink("configuracoes", "Settings", "settings")}
+          ${navLink("creditos", "Credits", "user")}
+        </nav>
       </aside>
 
-      <main class="content">
-        <p id="status" class="status-box"></p>
-        ${contentHtml}
+      <!-- MAIN -->
+      <main class="main">
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+          <input class="search" placeholder="Search users, books or loans..." />
+          <div class="user">Admin</div>
+        </header>
+
+        <!-- CONTENT -->
+        <section class="content">
+          ${content}
+        </section>
+
       </main>
     </div>
+  `;
+}
+
+function navLink(page, label, icon) {
+  const isDashboard = page === "dashboard";
+  const href = isDashboard ? "./index.html" : `./${page}.html`;
+
+  const path = location.pathname;
+  const isActive = isDashboard
+    ? path.includes("index.html") || path.endsWith("/")
+    : path.includes(`${page}.html`);
+
+  return `
+    <a class="nav-item ${isActive ? "active" : ""}" href="${href}">
+      <span>${label}</span>
+    </a>
   `;
 }
 
