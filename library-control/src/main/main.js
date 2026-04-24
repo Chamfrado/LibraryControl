@@ -654,6 +654,10 @@ app.whenReady().then(() => {
     };
   });
 
+  ipcMain.handle("link:externo", async (_, url) => {
+    await shell.openExternal(url);
+  });
+
   ipcMain.handle("sistema:restaurar-backup", async () => {
     const destino = getDatabasePath();
 

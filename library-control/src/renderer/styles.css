@@ -561,3 +561,13 @@ td {
   white-space: pre-line;
   text-align: center;
 }
+
+.creditos-card {
+  max-width: 620px;
+  line-height: 1.6;
+}
+
+.creditos-card a {
+  color: #2563eb;
+  font-weight: bold;
+}

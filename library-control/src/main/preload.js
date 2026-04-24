@@ -82,4 +82,6 @@ contextBridge.exposeInMainWorld("api", {
     ipcRenderer.invoke("importar:exportar-erros", erros),
 
   abrirPastaBackups: () => ipcRenderer.invoke("backup:abrir-pasta"),
+
+  abrirLinkExterno: (url) => ipcRenderer.invoke("link:externo", url),
 });
