@@ -196,6 +196,94 @@ function gerarPdfEmprestimos(dados, destino) {
   });
 }
 
+function calcularDiasAtraso(dataDevolucao) {
+  if (!dataDevolucao) return 0;
+
+  const hoje = new Date();
+  const hojeLocal = new Date(
+    hoje.getFullYear(),
+    hoje.getMonth(),
+    hoje.getDate(),
+  );
+
+  const [ano, mes, dia] = String(dataDevolucao).split("-").map(Number);
+  const devolucao = new Date(ano, mes - 1, dia);
+
+  const diff = hojeLocal - devolucao;
+  return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+}
+
+function gerarPdfInadimplentes(dados, destino) {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({ margin: 40, size: "A4" });
+    const stream = fs.createWriteStream(destino);
+
+    doc.pipe(stream);
+
+    doc.fontSize(18).text("Relatório de Inadimplentes", { align: "center" });
+    doc.moveDown();
+
+    const agora = new Date();
+
+    doc.fontSize(10).text(`Gerado em: ${agora.toLocaleString("pt-BR")}`, {
+      align: "right",
+    });
+
+    doc.moveDown();
+
+    let y = doc.y;
+
+    function escreverLinha(
+      usuario,
+      livro,
+      emprestimo,
+      devolucao,
+      atraso,
+      header = false,
+    ) {
+      if (y > 730) {
+        doc.addPage();
+        y = 50;
+      }
+
+      doc.font(header ? "Helvetica-Bold" : "Helvetica");
+      doc.fontSize(header ? 10 : 8);
+
+      const options = {
+        height: 32,
+        ellipsis: true,
+      };
+
+      doc.text(usuario, 40, y, { width: 105, ...options });
+      doc.text(livro, 150, y, { width: 150, ...options });
+      doc.text(emprestimo, 305, y, { width: 75, ...options });
+      doc.text(devolucao, 385, y, { width: 75, ...options });
+      doc.text(atraso, 465, y, { width: 85, ...options });
+
+      y += header ? 24 : 36;
+    }
+
+    escreverLinha("Usuário", "Livro", "Empréstimo", "Limite", "Atraso", true);
+
+    dados.forEach((item) => {
+      const dias = calcularDiasAtraso(item.data_devolucao);
+
+      escreverLinha(
+        item.usuario ?? "",
+        item.livro ?? "",
+        item.data_atual ?? "",
+        item.data_devolucao ?? "",
+        `${dias} dia${dias === 1 ? "" : "s"}`,
+      );
+    });
+
+    doc.end();
+
+    stream.on("finish", resolve);
+    stream.on("error", reject);
+  });
+}
+
 function parseCsvConteudo(conteudo) {
   const linhas = conteudo
     .split(/\r?\n/)
@@ -435,6 +523,34 @@ app.whenReady().then(() => {
     }
 
     return registrarDevolucao(emprestimoId);
+  });
+
+  ipcMain.handle("relatorio:inadimplentes-pdf", async () => {
+    const dados = listarEmprestimosAtrasados();
+
+    const agora = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+
+    const nomeArquivo =
+      `inadimplentes-${agora.getFullYear()}-${pad(agora.getMonth() + 1)}-${pad(agora.getDate())}_` +
+      `${pad(agora.getHours())}-${pad(agora.getMinutes())}-${pad(agora.getSeconds())}.pdf`;
+
+    const result = await dialog.showSaveDialog({
+      title: "Salvar relatório de inadimplentes",
+      defaultPath: nomeArquivo,
+      filters: [{ name: "PDF", extensions: ["pdf"] }],
+    });
+
+    if (result.canceled || !result.filePath) {
+      return { canceled: true };
+    }
+
+    await gerarPdfInadimplentes(dados, result.filePath);
+
+    return {
+      canceled: false,
+      path: result.filePath,
+    };
   });
 
   ipcMain.handle("emprestimo:listar-atrasados", () => {

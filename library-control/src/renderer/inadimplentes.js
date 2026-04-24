@@ -7,9 +7,15 @@ document.getElementById("app").innerHTML = getLayout(
         <p>Acompanhe usuários com empréstimos em atraso.</p>
       </div>
 
-      <button id="btnAtualizarInadimplentes" class="btn-primary">
-        Atualizar
-      </button>
+      <div class="actions-row">
+       <button id="btnAtualizarInadimplentes" class="btn-light">
+         Atualizar
+       </button>
+
+       <button id="btnGerarPdfInadimplentes" class="btn-primary">
+         Gerar PDF
+       </button>
+      </div>
     </div>
 
     <section class="stats-grid">
@@ -46,6 +52,10 @@ const resultadoInadimplentes = document.getElementById(
 );
 const btnAtualizarInadimplentes = document.getElementById(
   "btnAtualizarInadimplentes",
+);
+
+const btnGerarPdfInadimplentes = document.getElementById(
+  "btnGerarPdfInadimplentes",
 );
 
 function formatarDataPtBr(data) {
@@ -186,6 +196,30 @@ btnAtualizarInadimplentes.addEventListener("click", async () => {
   try {
     await carregarInadimplentes();
   } catch (error) {
+    await alertModal({
+      title: "Erro",
+      message: error.message,
+    });
+  }
+});
+
+btnGerarPdfInadimplentes.addEventListener("click", async () => {
+  try {
+    showLoadingModal("Gerando PDF de inadimplentes...");
+
+    const resultado = await window.api.exportarInadimplentesPdf();
+
+    hideLoadingModal();
+
+    if (resultado?.canceled) return;
+
+    await alertModal({
+      title: "PDF gerado",
+      message: `Relatório de inadimplentes salvo em:\n${resultado.path}`,
+    });
+  } catch (error) {
+    hideLoadingModal();
+
     await alertModal({
       title: "Erro",
       message: error.message,

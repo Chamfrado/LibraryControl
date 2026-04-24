@@ -68,6 +68,25 @@ function criarEmprestimo(userId, acervoId, totalDias) {
   const hoje = new Date();
   const diaSemana = diasSemana[hoje.getDay()];
 
+  const usuarioComAtraso = db
+    .prepare(
+      `
+    SELECT 1
+    FROM emprestimos
+    WHERE user_id = ?
+      AND lower(COALESCE(devolvido, '')) NOT LIKE '%sim%'
+      AND date(data_devolucao) < date('now', 'localtime')
+    LIMIT 1
+  `,
+    )
+    .get(userId);
+
+  if (usuarioComAtraso) {
+    throw new Error(
+      "Este usuário possui empréstimos em atraso. Regularize antes de criar novo empréstimo.",
+    );
+  }
+
   const criarEmprestimoTx = db.transaction(() => {
     const livro = db
       .prepare(
