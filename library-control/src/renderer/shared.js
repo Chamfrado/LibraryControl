@@ -58,6 +58,53 @@ function navLink(page, label, icon) {
   `;
 }
 
+function paginarLista(lista, paginaAtual = 1, itensPorPagina = 10) {
+  const totalItens = lista.length;
+  const totalPaginas = Math.max(1, Math.ceil(totalItens / itensPorPagina));
+  const paginaSegura = Math.min(Math.max(1, paginaAtual), totalPaginas);
+
+  const inicio = (paginaSegura - 1) * itensPorPagina;
+  const fim = inicio + itensPorPagina;
+
+  return {
+    itens: lista.slice(inicio, fim),
+    paginaAtual: paginaSegura,
+    totalPaginas,
+    totalItens,
+  };
+}
+
+function renderPaginacao({ containerId, paginaAtual, totalPaginas, onPage }) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="pagination">
+      <button class="btn-light" id="${containerId}-prev" ${paginaAtual <= 1 ? "disabled" : ""}>
+        Anterior
+      </button>
+
+      <span>Página ${paginaAtual} de ${totalPaginas}</span>
+
+      <button class="btn-light" id="${containerId}-next" ${paginaAtual >= totalPaginas ? "disabled" : ""}>
+        Próxima
+      </button>
+    </div>
+  `;
+
+  document
+    .getElementById(`${containerId}-prev`)
+    ?.addEventListener("click", () => {
+      onPage(paginaAtual - 1);
+    });
+
+  document
+    .getElementById(`${containerId}-next`)
+    ?.addEventListener("click", () => {
+      onPage(paginaAtual + 1);
+    });
+}
+
 function setStatus(message, type = "") {
   const el = document.getElementById("status");
   if (!el) return;

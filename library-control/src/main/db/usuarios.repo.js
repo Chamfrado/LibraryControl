@@ -13,7 +13,7 @@ function listarUsuarios() {
       fone,
       email
     FROM cad_usuario
-    ORDER BY nome
+    ORDER BY nome COLLATE NOCASE ASC
   `);
 
   return stmt.all();
@@ -33,7 +33,7 @@ function buscarUsuarios(termo) {
       email
     FROM cad_usuario
     WHERE nome LIKE ? OR login LIKE ?
-    ORDER BY nome
+    ORDER BY nome COLLATE NOCASE ASC
   `);
 
   return stmt.all(`%${termo}%`, `%${termo}%`);

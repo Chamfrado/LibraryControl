@@ -84,6 +84,7 @@ document.getElementById("app").innerHTML = getLayout(
       </div>
 
       <div id="resultadoEmprestimos"></div>
+      <div id="paginacaoEmprestimos"></div>
     </div>
   </section>
 `,
@@ -108,6 +109,9 @@ const livroSelecionadoCard = document.getElementById("livroSelecionadoCard");
 
 let usuarioSelecionado = null;
 let livroSelecionado = null;
+
+let paginaEmprestimos = 1;
+const ITENS_POR_PAGINA = 10;
 
 function formatarDataPtBr(data) {
   if (!data) return "";
@@ -262,6 +266,8 @@ function renderLivroSelecionado() {
 }
 
 function renderEmprestimos(lista) {
+  const pagina = paginarLista(lista, paginaEmprestimos, ITENS_POR_PAGINA);
+  const itens = pagina.itens;
   resultadoEmprestimosEl.innerHTML = `
     <h2>Empréstimos - Total: ${lista.length}</h2>
     <div class="table-wrapper">
@@ -275,7 +281,7 @@ function renderEmprestimos(lista) {
         <th>Prazo</th>
         <th>Ação</th>
       </tr>
-      ${lista
+      ${itens
         .map((e) => {
           const info = getInfoEmprestimo(e);
 
@@ -307,6 +313,16 @@ function renderEmprestimos(lista) {
    </table>
 </div>
   `;
+
+  renderPaginacao({
+    containerId: "paginacaoEmprestimos",
+    paginaAtual: pagina.paginaAtual,
+    totalPaginas: pagina.totalPaginas,
+    onPage: (novaPagina) => {
+      paginaEmprestimos = novaPagina;
+      renderEmprestimos(lista);
+    },
+  });
 
   document.querySelectorAll(".btn-devolver").forEach((botao) => {
     botao.addEventListener("click", async () => {

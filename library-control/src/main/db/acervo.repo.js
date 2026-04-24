@@ -19,7 +19,7 @@ function listarAcervo() {
     FROM cad_acervo a
     LEFT JOIN cad_categoria c ON c.id = a.categoria
     LEFT JOIN cad_tipo t ON t.id = a.tipo
-    ORDER BY a.titulo
+    ORDER BY a.titulo COLLATE NOCASE ASC
   `);
 
   return stmt.all();
@@ -45,7 +45,7 @@ function buscarAcervo(termo) {
     LEFT JOIN cad_categoria c ON c.id = a.categoria
     LEFT JOIN cad_tipo t ON t.id = a.tipo
     WHERE a.titulo LIKE ? OR a.autor LIKE ?
-    ORDER BY a.titulo
+    ORDER BY a.titulo COLLATE NOCASE ASC
   `);
 
   return stmt.all(`%${termo}%`, `%${termo}%`);
@@ -223,7 +223,7 @@ function listarAcervoComResumo() {
       a.id, a.titulo, a.autor, a.editora, a.isbn,
       a.quantidade, a.capa, a.categoria, a.tipo,
       c.titulo, t.descricao
-    ORDER BY a.titulo
+    ORDER BY a.titulo COLLATE NOCASE ASC
   `);
 
   return stmt.all();

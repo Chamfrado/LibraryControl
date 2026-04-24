@@ -99,6 +99,7 @@ document.getElementById("app").innerHTML = getLayout(
       </div>
 
       <div id="resultado"></div>
+      <div id="paginacaoAcervo"></div>
     </div>
   </section>
 `,
@@ -135,6 +136,9 @@ let livroEmEdicaoId = null;
 const previewImagemWrapper = document.getElementById("previewImagemWrapper");
 const previewImagemLivro = document.getElementById("previewImagemLivro");
 
+let paginaAcervo = 1;
+const ITENS_POR_PAGINA = 10;
+
 function limparFormulario() {
   livroTitulo.value = "";
   livroAutor.value = "";
@@ -168,10 +172,12 @@ function renderStatusAcervo(qtd) {
 }
 
 function renderAcervo(lista) {
+  const pagina = paginarLista(lista, paginaAcervo, ITENS_POR_PAGINA);
+  const itens = pagina.itens;
   resultadoEl.innerHTML = `
     <h2>Acervo - Total: ${lista.length}</h2>
    <div class="table-wrapper">
-<table class="modern-table">
+    <table class="modern-table">
       <tr>
         <th>Capa</th>
         <th>Título</th>
@@ -183,7 +189,7 @@ function renderAcervo(lista) {
         <th>Status</th>
         <th>Ações</th>
       </tr>
-      ${lista
+      ${itens
         .map((l) => {
           const qtd = Number(l.quantidade ?? 0);
           const status = qtd > 0 ? "Disponível" : "Indisponível";
@@ -299,6 +305,16 @@ function renderAcervo(lista) {
         });
       }
     });
+  });
+
+  renderPaginacao({
+    containerId: "paginacaoAcervo",
+    paginaAtual: pagina.paginaAtual,
+    totalPaginas: pagina.totalPaginas,
+    onPage: (novaPagina) => {
+      paginaAcervo = novaPagina;
+      renderAcervo(lista);
+    },
   });
 
   document.querySelectorAll(".btn-excluir").forEach((btn) => {

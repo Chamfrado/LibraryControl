@@ -87,7 +87,4 @@ contextBridge.exposeInMainWorld("api", {
 
   exportarInadimplentesPdf: () =>
     ipcRenderer.invoke("relatorio:inadimplentes-pdf"),
-
-  exportarInadimplentesPdf: () =>
-    ipcRenderer.invoke("relatorio:inadimplentes-pdf"),
 });

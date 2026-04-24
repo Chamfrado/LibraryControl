@@ -77,6 +77,7 @@ document.getElementById("app").innerHTML = getLayout(
       </div>
 
       <div id="resultadoUsuarios"></div>
+      <div id="paginacaoUsuarios"></div>
     </div>
   </section>
 `,
@@ -104,6 +105,9 @@ const btnLimparUsuario = document.getElementById("btnLimparUsuario");
 
 let listaUsuariosAtual = [];
 let usuarioEmEdicaoId = null;
+
+let paginaUsuarios = 1;
+const ITENS_POR_PAGINA = 10;
 
 function limparFormulario() {
   usuarioNome.value = "";
@@ -215,6 +219,8 @@ async function abrirHistoricoUsuario(usuarioId) {
 }
 
 function renderUsuarios(lista) {
+  const pagina = paginarLista(lista, paginaUsuarios, ITENS_POR_PAGINA);
+  const itens = pagina.itens;
   resultadoUsuariosEl.innerHTML = `
     <h2>Usuários - Total: ${lista.length}</h2>
    <div class="table-wrapper">
@@ -228,7 +234,7 @@ function renderUsuarios(lista) {
         <th>E-mail</th>
         <th>Ações</th>
       </tr>
-      ${lista
+      ${itens
         .map(
           (usuario) => `
             <tr>
@@ -250,6 +256,16 @@ function renderUsuarios(lista) {
     </table>
   </div>
   `;
+
+  renderPaginacao({
+    containerId: "paginacaoUsuarios",
+    paginaAtual: pagina.paginaAtual,
+    totalPaginas: pagina.totalPaginas,
+    onPage: (novaPagina) => {
+      paginaUsuarios = novaPagina;
+      renderUsuarios(lista);
+    },
+  });
 
   document.querySelectorAll(".btn-historico-usuario").forEach((btn) => {
     btn.addEventListener("click", async () => {
