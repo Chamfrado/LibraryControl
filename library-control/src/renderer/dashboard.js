@@ -167,6 +167,8 @@ function renderAtrasados(lista) {
   `;
 }
 
+aplicarConfiguracaoInstituicao();
+
 btnAtualizarDashboard.addEventListener("click", async () => {
   try {
     await carregarDashboard();

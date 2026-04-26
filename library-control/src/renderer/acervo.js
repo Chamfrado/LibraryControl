@@ -105,6 +105,8 @@ document.getElementById("app").innerHTML = getLayout(
 `,
 );
 
+aplicarConfiguracaoInstituicao();
+
 const resultadoEl = document.getElementById("resultado");
 const tituloFormularioLivro = document.getElementById("tituloFormularioLivro");
 const inputBusca = document.getElementById("busca");
@@ -197,11 +199,12 @@ function renderAcervo(lista) {
           return `
           <tr>
             <td>
-              ${
-                l.capa
-                  ? `<img src="${getCapaLivroUrl(l.capa)}" alt="Capa" class="capa-livro" />`
-                  : "-"
-              }
+             <img
+  src="${getCapaLivroUrl(l.capa)}"
+  alt="Capa"
+  class="capa-livro"
+  onerror="this.onerror=null;this.src='./assets/sem-capa.png';"
+/>
             </td>
             <td>${l.titulo ?? ""}</td>
             <td>${l.autor ?? ""}</td>
@@ -274,7 +277,7 @@ function renderAcervo(lista) {
                     <div>
                       ${
                         livro.capa
-                          ? `<img src="./assets/livros/${encodeURIComponent(livro.capa)}" alt="Capa" class="detalhes-capa" />`
+                          ? `<img id="previewImagemLivro" class="capa-preview" alt="Pré-visualização da capa" />`
                           : `<div class="detalhes-capa sem-capa">Sem capa</div>`
                       }
                     </div>

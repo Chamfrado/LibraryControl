@@ -45,6 +45,8 @@ document.getElementById("app").innerHTML = getLayout(
   `,
 );
 
+aplicarConfiguracaoInstituicao();
+
 const totalAtrasados = document.getElementById("totalAtrasados");
 const maiorAtraso = document.getElementById("maiorAtraso");
 const resultadoInadimplentes = document.getElementById(

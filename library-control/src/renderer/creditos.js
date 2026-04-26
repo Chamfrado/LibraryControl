@@ -52,7 +52,7 @@ document.getElementById("app").innerHTML = getLayout(
 
         <div class="creditos-about">
           <p>
-            O <strong>Bibliotecário Desktop</strong> foi desenvolvido para facilitar o controle de acervo,
+            O <strong>Shelfy</strong> foi desenvolvido para facilitar o controle de acervo,
             empréstimos e usuários em ambientes escolares.
           </p>
 
@@ -65,6 +65,8 @@ document.getElementById("app").innerHTML = getLayout(
     </section>
   `,
 );
+
+aplicarConfiguracaoInstituicao();
 
 document.getElementById("linkLinkedin").addEventListener("click", (e) => {
   e.preventDefault();

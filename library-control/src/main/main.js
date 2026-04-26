@@ -52,11 +52,16 @@ const {
 
 const fs = require("fs");
 const { getDatabasePath, closeDatabase } = require("./db/connection");
+const {
+  obterConfiguracao,
+  salvarConfiguracao,
+} = require("./db/configuracao.repo");
 
 function createWindow() {
   const win = new BrowserWindow({
     width: 1400,
     height: 900,
+    icon: path.join(__dirname, "../../build/icon.ico"),
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
@@ -64,8 +69,22 @@ function createWindow() {
       sandbox: true,
     },
   });
+  win.maximize();
 
   win.loadFile(path.join(__dirname, "../renderer/index.html"));
+}
+function getInstituicaoImagesDir() {
+  return path.join(app.getPath("userData"), "instituicao");
+}
+
+function garantirPastaInstituicao() {
+  const dir = getInstituicaoImagesDir();
+
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+
+  return dir;
 }
 
 function analisarAcervoCsv(arquivo) {
@@ -372,6 +391,14 @@ protocol.registerSchemesAsPrivileged([
       supportFetchAPI: true,
     },
   },
+  {
+    scheme: "instituicao-img",
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+    },
+  },
 ]);
 
 function getLivrosImagesDir() {
@@ -501,6 +528,14 @@ app.whenReady().then(() => {
 
   ipcMain.handle("emprestimo:listar", () => {
     return listarEmprestimos();
+  });
+
+  ipcMain.handle("config:obter", () => {
+    return obterConfiguracao();
+  });
+
+  ipcMain.handle("config:salvar", (_, payload) => {
+    return salvarConfiguracao(payload);
   });
 
   ipcMain.handle("emprestimo:criar", (_, payload) => {
@@ -927,6 +962,38 @@ app.whenReady().then(() => {
     return listarHistoricoPorLivro(Number(acervoId));
   });
 
+  ipcMain.handle("instituicao:selecionar-logo", async () => {
+    const result = await dialog.showOpenDialog({
+      properties: ["openFile"],
+      filters: [{ name: "Imagens", extensions: ["jpg", "jpeg", "png"] }],
+    });
+
+    if (result.canceled || !result.filePaths.length) {
+      return null;
+    }
+
+    return result.filePaths[0];
+  });
+
+  ipcMain.handle("instituicao:upload-logo", async (_, filePath) => {
+    if (!filePath) {
+      throw new Error("Arquivo não informado.");
+    }
+
+    const ext = path.extname(filePath).toLowerCase();
+
+    if (![".jpg", ".jpeg", ".png"].includes(ext)) {
+      throw new Error("Formato inválido. Use JPG, JPEG ou PNG.");
+    }
+
+    const nomeFinal = `logo-instituicao${ext}`;
+    const destino = path.join(garantirPastaInstituicao(), nomeFinal);
+
+    fs.copyFileSync(filePath, destino);
+
+    return nomeFinal;
+  });
+
   ipcMain.handle("modelo:baixar-acervo", async () => {
     const conteudo = [
       "# MODELO DE IMPORTAÇÃO - ACERVO",
@@ -1252,6 +1319,21 @@ app.whenReady().then(() => {
       canceled: false,
       path: result.filePath,
     };
+  });
+
+  garantirPastaInstituicao();
+
+  protocol.handle("instituicao-img", (request) => {
+    const url = new URL(request.url);
+    const nomeArquivo = decodeURIComponent(url.pathname.replace("/", ""));
+
+    const caminho = path.join(getInstituicaoImagesDir(), nomeArquivo);
+
+    if (!fs.existsSync(caminho)) {
+      return new Response("Imagem não encontrada", { status: 404 });
+    }
+
+    return net.fetch(pathToFileURL(caminho).toString());
   });
 
   createWindow();

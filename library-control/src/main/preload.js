@@ -87,4 +87,13 @@ contextBridge.exposeInMainWorld("api", {
 
   exportarInadimplentesPdf: () =>
     ipcRenderer.invoke("relatorio:inadimplentes-pdf"),
+
+  obterConfiguracao: () => ipcRenderer.invoke("config:obter"),
+  salvarConfiguracao: (payload) => ipcRenderer.invoke("config:salvar", payload),
+
+  selecionarLogoInstituicao: () =>
+    ipcRenderer.invoke("instituicao:selecionar-logo"),
+
+  uploadLogoInstituicao: (filePath) =>
+    ipcRenderer.invoke("instituicao:upload-logo", filePath),
 });

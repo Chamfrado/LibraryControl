@@ -89,6 +89,7 @@ document.getElementById("app").innerHTML = getLayout(
   </section>
 `,
 );
+aplicarConfiguracaoInstituicao();
 
 const inputDias = document.getElementById("inputDias");
 const btnCriarEmprestimo = document.getElementById("btnCriarEmprestimo");
@@ -242,9 +243,12 @@ function renderLivroSelecionado() {
     <div class="selecionado-card-livro">
       <div>
         ${
-          livroSelecionado.capa
-            ? `<img src="${getCapaLivroUrl(livroSelecionado.capa)}" alt="Capa" class="selecionado-capa" />`
-            : `<div class="selecionado-capa sem-capa">Sem capa</div>`
+          `<img
+  src="${getCapaLivroUrl(livroSelecionado.capa)}"
+  alt="Capa"
+  class="selecionado-capa"
+  onerror="this.onerror=null;this.src='./assets/sem-capa.png';"
+/>`
         }
       </div>
       <div>
@@ -465,9 +469,12 @@ async function selecionarLivro() {
         <div class="modal-item-livro">
           <div>
             ${
-              l.capa
-                ? `<img src="${getCapaLivroUrl(l.capa)}" alt="Capa" class="modal-item-capa" />`
-                : `<div class="modal-item-capa sem-capa">Sem capa</div>`
+              `<img
+  src="${getCapaLivroUrl(l.capa)}"
+  alt="Capa"
+  class="modal-item-capa"
+  onerror="this.onerror=null;this.src='./assets/sem-capa.png';"
+/>`
             }
           </div>
           <div class="modal-item-card ${estoque.cardClass}">

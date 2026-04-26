@@ -3,10 +3,10 @@ function getLayout(active, content) {
     <div class="app">
       <aside class="sidebar">
         <div class="sidebar-brand">
-          <div class="brand-icon">📚</div>
+          <div class="brand-icon" data-config="logo-instituicao">📚</div>
           <div>
-            <strong>Bibliotecário</strong>
-            <span>Desktop</span>
+            <strong data-config="nome-sistema">Shelfy</strong>
+            <span data-config="nome-instituicao">Sistema de controle de biblioteca</span>
           </div>
         </div>
 
@@ -28,8 +28,8 @@ function getLayout(active, content) {
       <main class="main">
         <header class="topbar">
           <div>
-            <strong>Bibliotecário Desktop</strong>
-            <span>Sistema de controle de biblioteca</span>
+            <strong data-config="nome-sistema">Shelfy</strong>
+            <span data-config="nome-instituicao">Sistema de controle de biblioteca</span>
           </div>
         </header>
 
@@ -39,6 +39,12 @@ function getLayout(active, content) {
       </main>
     </div>
   `;
+}
+
+let configGlobal = null;
+
+async function loadConfig() {
+  configGlobal = await window.api.obterConfiguracao();
 }
 
 function navLink(page, label, icon) {
@@ -74,6 +80,44 @@ function paginarLista(lista, paginaAtual = 1, itensPorPagina = 10) {
   };
 }
 
+async function aplicarConfiguracaoInstituicao() {
+  try {
+    if (!window.api?.obterConfiguracao) return;
+
+    const config = await window.api.obterConfiguracao();
+
+    const nomeSistema = "Shelfy";
+    const nomeInstituicao = config?.nome || "Sistema de controle de biblioteca";
+
+    document.querySelectorAll("[data-config='nome-sistema']").forEach((el) => {
+      el.textContent = nomeSistema;
+    });
+
+    document
+      .querySelectorAll("[data-config='nome-instituicao']")
+      .forEach((el) => {
+        el.textContent = nomeInstituicao;
+      });
+
+    document
+      .querySelectorAll("[data-config='logo-instituicao']")
+      .forEach((el) => {
+        if (config?.logo) {
+          el.innerHTML = `<img src="${getLogoInstituicaoUrl(config.logo)}" alt="Logo" class="brand-logo" />`;
+        } else {
+          el.textContent = "📚";
+        }
+      });
+  } catch (error) {
+    console.error("Erro ao carregar configuração da instituição:", error);
+  }
+}
+
+function getLogoInstituicaoUrl(nomeArquivo) {
+  if (!nomeArquivo) return "";
+  return `instituicao-img://logo/${encodeURIComponent(nomeArquivo)}`;
+}
+
 function renderPaginacao({ containerId, paginaAtual, totalPaginas, onPage }) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -103,6 +147,19 @@ function renderPaginacao({ containerId, paginaAtual, totalPaginas, onPage }) {
     ?.addEventListener("click", () => {
       onPage(paginaAtual + 1);
     });
+}
+
+function getCapaLivroUrl(capa) {
+  if (!capa) return "./assets/sem-capa.png";
+
+  return `livro-img://livros/${encodeURIComponent(capa)}`;
+}
+
+function aplicarFallbackImagem(img) {
+  img.onerror = () => {
+    img.onerror = null;
+    img.src = "./assets/sem-capa.png";
+  };
 }
 
 function setStatus(message, type = "") {

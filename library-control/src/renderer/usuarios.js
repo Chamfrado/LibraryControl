@@ -83,6 +83,8 @@ document.getElementById("app").innerHTML = getLayout(
 `,
 );
 
+aplicarConfiguracaoInstituicao();
+
 const usuarioNome = document.getElementById("usuarioNome");
 const usuarioLogin = document.getElementById("usuarioLogin");
 const usuarioNivel = document.getElementById("usuarioNivel");
