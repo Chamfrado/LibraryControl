@@ -37,7 +37,7 @@ A proposta é entregar acessibilidade, segurança de dados local e autonomia par
 
 ## 🎬 Demonstração
 
-![Preview](./docs/preview.gif)
+![Preview](./docs/shelfy-preview-tech.gif)
 
 > Um preview visual como `./docs/preview.gif` faz toda a diferença ao apresentar o Shelfy como projeto destaque.
 
